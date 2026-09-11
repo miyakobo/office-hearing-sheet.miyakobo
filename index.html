@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>オフィス要件ヒアリング｜宮工房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  /* ── Industry design tokens (from the bundled design system) ── */
+  :root{
+    --bg:#f2f2f3; --surface:#e9e9ea; --ink:#1d1f20; --paper:#ffffff;
+    --accent:#5980a6; --accent-100:#eef6ff; --accent-200:#d6ebff; --accent-600:#597ea3;
+    --accent-700:#416180; --accent-800:#2c455d; --accent-900:#1d2d3d;
+    --divider:rgba(29,31,32,.16); --divider2:rgba(29,31,32,.32);
+    --muted:rgba(29,31,32,.62); --faint:rgba(29,31,32,.32);
+    --head:"Barlow Condensed","Noto Sans JP",sans-serif;
+    --body:"Barlow","Noto Sans JP",system-ui,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  input,textarea,button{font:inherit;color:inherit}
+  textarea{resize:vertical}
+  ::selection{background:var(--accent-200)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  h1,h2{font-family:var(--head);font-weight:600;margin:0;letter-spacing:-.005em}
+
+  .app{display:flex;flex-wrap:wrap;align-items:stretch;min-height:100vh}
+
+  /* rail */
+  .rail{flex:1 1 260px;max-width:296px;min-width:230px;border-right:1px solid var(--divider);
+        padding:26px 0 28px;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto;background:var(--bg)}
+  .rail .brand{padding:0 22px 18px;border-bottom:1px solid var(--divider)}
+  .kicker{font-family:var(--head);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+  .rail .name{font-family:var(--head);font-weight:600;font-size:23px;line-height:1.2;margin-top:8px}
+  .count{display:flex;align-items:baseline;gap:7px;margin-top:14px;font-family:var(--head);line-height:1}
+  .count b{font-size:27px;font-weight:600;font-variant-numeric:tabular-nums}
+  .count span{font-size:12px;letter-spacing:.14em;color:var(--muted)}
+  .modebadge{margin-top:12px;font-size:11px;letter-spacing:.04em;color:var(--accent-700);display:inline-flex;
+             align-items:center;gap:6px;border:1px solid var(--accent-200);background:var(--accent-100);padding:4px 9px}
+  .steps{display:flex;flex-direction:column;padding-top:10px}
+  .step{display:flex;align-items:center;gap:11px;padding:11px 22px;border:none;background:transparent;
+        border-left:3px solid transparent;cursor:pointer;text-align:left;width:100%;color:var(--ink)}
+  .step:hover{background:var(--surface)}
+  .step.on{background:var(--surface);border-left-color:var(--accent)}
+  .step .no{font-family:var(--head);font-size:14px;letter-spacing:.08em;font-variant-numeric:tabular-nums;color:var(--faint)}
+  .step.on .no{color:var(--accent-700)}
+  .step .lbl{font-size:13px;line-height:1.35}
+  .step .dot{margin-left:auto;width:8px;height:8px;flex:0 0 auto;border:1px solid var(--divider2)}
+  .step.done .dot{background:var(--accent);border-color:var(--accent)}
+  .step.send{margin-top:8px;border-top:1px solid var(--divider)}
+
+  /* main */
+  main{flex:1 1 560px;min-width:0;display:flex;flex-direction:column;min-height:100vh;background:var(--paper)}
+  .stephead{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+            padding:28px 34px 16px;border-bottom:1px solid var(--ink)}
+  .stephead .hl{display:flex;align-items:baseline;gap:18px;min-width:0}
+  .stephead .big{font-family:var(--head);font-size:56px;font-weight:600;line-height:.85;font-variant-numeric:tabular-nums;color:var(--accent)}
+  .stephead h1{font-size:31px;line-height:1.15;margin-top:2px}
+  .content{flex:1 1 auto;padding:26px 34px 40px;max-width:980px;width:100%}
+  .hint{font-size:13.5px;color:var(--muted);margin-bottom:22px;max-width:64ch}
+
+  /* buttons */
+  .btn{border:1px solid var(--divider2);background:transparent;color:var(--ink);padding:10px 20px;
+       font-family:var(--head);font-size:14.5px;letter-spacing:.05em;cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent-700)}
+  .btn:disabled{border-color:var(--divider);color:var(--faint);cursor:default}
+  .btn-solid{background:var(--accent);border-color:var(--accent);color:#fbfcfd}
+  .btn-solid:hover{background:var(--accent-600);border-color:var(--accent-600);color:#fbfcfd}
+  .btn-sm{padding:6px 14px;font-size:13px}
+
+  /* fields */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px 22px}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:0}
+  .field.wide{grid-column:1/-1}
+  .field>span{font-family:var(--head);font-size:12.5px;letter-spacing:.08em;color:var(--muted)}
+  .field input,.field textarea{border:1px solid var(--divider2);background:var(--surface);padding:11px 13px;
+       font-size:16px;width:100%;border-radius:0}
+  .field textarea{font-size:15px;line-height:1.7}
+  .sub{margin-top:26px;padding-top:20px;border-top:1px dashed var(--divider)}
+
+  /* chip groups */
+  .chipgroup{margin-top:26px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{position:relative;display:inline-flex;align-items:center;padding:10px 18px;font-size:14.5px;
+        cursor:pointer;user-select:none;border:1px solid var(--divider2)}
+  .chip:hover{border-color:var(--accent)}
+  .chip input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fbfcfd}
+  .grouplabel{font-family:var(--head);font-size:12.5px;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+
+  /* checks */
+  .checks{display:grid;gap:8px 16px;align-items:start}
+  .check{display:flex;align-items:center;gap:13px;padding:12px 14px;cursor:pointer;min-width:0;border:1px solid var(--divider)}
+  .check:hover{border-color:var(--accent)}
+  .check.on{border-color:var(--accent);background:var(--accent-100)}
+  .check input[type=checkbox]{width:17px;height:17px;margin:0;flex:0 0 auto;accent-color:var(--accent);cursor:pointer}
+  .check .txt{font-size:14.5px}
+  .qtys{margin-left:auto;display:flex;gap:10px;flex:0 0 auto}
+  .qty{display:inline-flex;align-items:center;gap:5px}
+  .qty input{width:58px;border:1px solid var(--divider2);background:var(--surface);padding:5px 7px;
+             font-size:13.5px;text-align:right;border-radius:0}
+  .qty input:disabled{opacity:.35}
+  .qty span{font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+  .check-item{border:1px solid var(--divider)}
+  .check-item.on{border-color:var(--accent)}
+  .check-item .check{border:none;padding-bottom:8px}
+  .rooms{padding:0 14px 12px 44px;display:flex;flex-direction:column;gap:8px}
+  .room-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .room-del{border:1px solid var(--divider2);background:transparent;width:22px;height:22px;font-size:13px;
+            line-height:1;cursor:pointer;flex:0 0 auto;color:var(--ink)}
+  .room-del:hover{border-color:var(--accent)}
+  .room-add{align-self:flex-start;border:1px dashed var(--divider2);background:transparent;padding:6px 13px;
+            font-size:12.5px;cursor:pointer;font-family:var(--head);letter-spacing:.04em;color:var(--accent-700)}
+  .room-add:hover{border-color:var(--accent);background:var(--accent-100)}
+  .fieldnote{font-size:11.5px;color:var(--muted);margin-top:1px}
+
+  /* blueprint frame — squared corners + registration marks */
+  .bp{position:relative}
+  .bp>.corner{position:absolute;width:11px;height:11px;color:rgba(29,31,32,.45)}
+  .bp>.corner::before{content:"";position:absolute;left:5px;top:0;width:1px;height:100%;background:currentColor}
+  .bp>.corner::after{content:"";position:absolute;top:5px;left:0;width:100%;height:1px;background:currentColor}
+  .bp>.corner.tl{top:-6px;left:-6px} .bp>.corner.tr{top:-6px;right:-6px}
+  .bp>.corner.bl{bottom:-6px;left:-6px} .bp>.corner.br{bottom:-6px;right:-6px}
+
+  /* moods */
+  .moods{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:18px}
+  .mood{position:relative;display:block;cursor:pointer}
+  .mood input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;z-index:2;cursor:pointer}
+  .tile{display:flex;flex-direction:column;border:1px solid var(--divider2)}
+  .mood.on .tile{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:-3px}
+  .swatch{height:110px;display:block;filter:grayscale(.5) sepia(.15) saturate(1.3) hue-rotate(160deg);opacity:.75}
+  .mood.on .swatch{filter:none;opacity:1}
+  .cap{padding:10px 8px 11px;font-size:13.5px;text-align:center;border-top:1px solid var(--divider2)}
+  .mood.on .cap{border-top-color:var(--accent);color:var(--accent-700)}
+
+  /* photos */
+  .photos{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+  .photo-add{display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;
+             border:1px dashed var(--accent);color:var(--accent-700);font-size:12.5px;cursor:pointer;flex:0 0 auto;text-align:center}
+  .photo-add:hover{background:var(--accent-100)}
+  .photo{position:relative;width:96px;height:96px;border:1px solid var(--divider2);flex:0 0 auto;
+         background-size:cover;background-position:center;filter:grayscale(.4) sepia(.1) saturate(1.2) hue-rotate(160deg)}
+  .photo button{position:absolute;top:0;right:0;width:22px;height:22px;background:var(--accent-900);color:#fbfcfd;
+                border:none;font-size:13px;line-height:1;cursor:pointer}
+  .note{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.7}
+
+  /* spec panel */
+  .spec{position:relative;background:var(--accent-900);color:#ececee;padding:24px}
+  .spec .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+              border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:12px;margin-bottom:14px}
+  .spec h2{font-size:22px;color:#fbfcfd}
+  .spec .head .en{font-family:var(--head);font-size:11px;letter-spacing:.2em;color:#a9b6c2}
+  .spec textarea{background:transparent;border:none;color:#ececee;padding:0;width:100%;
+       font-family:ui-monospace,"SFMono-Regular",Menlo,"Noto Sans JP",monospace;font-size:13px;line-height:1.9;
+       min-height:44vh;white-space:pre-wrap}
+  .status{font-size:12.5px;min-height:18px;line-height:1.6;color:var(--muted)}
+  .status.ok,.status.err{color:var(--ink);font-weight:700}
+
+  .banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+          border:1px solid var(--accent);background:var(--accent-100);padding:11px 14px;font-size:13px;margin-bottom:26px}
+
+  /* footer nav */
+  .navbar{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--divider);
+          padding:14px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .ticks{display:flex;gap:3px}
+  .tick{width:18px;height:6px;border:1px solid var(--divider2)}
+  .tick.done{background:var(--accent);border-color:var(--accent)}
+  .tick.on{background:var(--accent-900);border-color:var(--accent-900);height:8px}
+  .stepno{font-family:var(--head);font-size:13px;letter-spacing:.12em;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* drawer */
+  .backdrop{position:fixed;inset:0;background:rgba(29,31,32,.4);z-index:40;display:none;justify-content:flex-end}
+  .backdrop.open{display:flex}
+  .drawer{width:min(460px,92vw);height:100%;background:var(--accent-900);color:#ececee;padding:24px;
+          display:flex;flex-direction:column;gap:14px;overflow:auto}
+  .drawer textarea{flex:1 1 auto;background:transparent;border:none;color:#ececee;padding:0;width:100%;
+       font-family:ui-monospace,"SFMono-Regular",Menlo,"Noto Sans JP",monospace;font-size:12.5px;line-height:1.9;resize:none}
+  .btn-inv{background:transparent;border:1px solid rgba(255,255,255,.35);color:#ececee;padding:11px;
+           font-family:var(--head);font-size:14px;cursor:pointer}
+  .btn-inv:hover{background:rgba(255,255,255,.1)}
+
+  @media (max-width:720px){
+    .stephead{padding:22px 20px 14px} .content{padding:20px 20px 32px} .navbar{padding:12px 20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="kicker">Miyakobo</div>
+      <div class="name">オフィス要件<br>ヒアリング</div>
+      <div class="count"><b id="filledCount">00</b><span id="stepTotalLbl">/ 09 記入済</span></div>
+      <div class="modebadge" id="modeBadge"></div>
+    </div>
+    <nav class="steps" id="steps"></nav>
+  </aside>
+
+  <main>
+    <header class="stephead">
+      <div class="hl">
+        <span class="big" id="stepNo">01</span>
+        <div>
+          <div class="kicker" id="stepEn"></div>
+          <h1 id="stepTitle"></h1>
+        </div>
+      </div>
+      <button class="btn" id="drawerBtn" type="button">要件サマリーを見る</button>
+    </header>
+
+    <div class="content" id="content"></div>
+
+    <footer class="navbar">
+      <button class="btn" id="prevBtn" type="button">← 戻る</button>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="ticks" id="ticks"></div>
+        <span class="stepno" id="stepLabel"></span>
+      </div>
+      <button class="btn" id="nextBtn" type="button">次へ →</button>
+    </footer>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="drawer" id="drawer">
+    <div class="spec head" style="background:transparent;padding:0">
+      <h2>要件サマリー</h2>
+      <button class="btn-inv" style="padding:5px 12px;font-size:13px" id="drawerClose" type="button">閉じる</button>
+    </div>
+    <textarea id="drawerText" readonly placeholder="チェックを入れると、ここに要件がまとまっていきます。"></textarea>
+    <button class="btn-inv" id="drawerCopy" type="button">コピー</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ─────────────────────────────────────────────
+   0. 送信先の設定
+   このApps Script Web AppのURLは、gas/Code.gs をデプロイした後に
+   発行されるURL（.../exec で終わるもの）に置き換えてください。
+   README.md の手順を参照。
+   ───────────────────────────────────────────── */
+var GAS_WEBAPP_URL = ""; // 例: "https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXX/exec"
+var NOTIFY_EMAIL = "ishikawa@miyakobo.com";
+
+/* ─────────────────────────────────────────────
+   1. 項目の定義（ここを編集すれば設問が変わります）
+   ───────────────────────────────────────────── */
+var SECTIONS = [
+  { id:"overview", no:"01", en:"PROJECT", title:"プロジェクト概要",
+    fields:[
+      {key:"caseName",label:"案件名",wide:true},
+      {key:"company",label:"会社名"},
+      {key:"contact",label:"ご担当者名・役職"},
+      {key:"address",label:"現在のオフィス所在地",wide:true},
+      {key:"moveDate",label:"入居希望日・移転期限",ph:"例：2027年4月"},
+      {key:"budget",label:"想定予算",ph:"例：5,000万円"},
+      {key:"sizeNote",label:"想定面積",ph:"例：800坪"}
+    ],
+    chipGroups:[
+      {group:"projectType",mode:"radio",label:"プロジェクト種別",
+        items:["移転","増床","改装（現オフィス）","その他"]},
+      {group:"contractType",mode:"radio",label:"契約形態",
+        items:["賃貸","自社保有","リースバック","未定"]}
+    ] },
+
+  { id:"background", no:"02", en:"BACKGROUND", title:"検討の背景",
+    hint:"今回のプロジェクトを考え始めたきっかけ（複数選択可）",
+    checks:{group:"background",min:280,items:[
+      {value:"人員増加で手狭になった"},{value:"オフィスの老朽化・設備劣化"},
+      {value:"賃料・固定費の見直し"},{value:"ブランドイメージの刷新"},
+      {value:"社員のコミュニケーション活性化"},{value:"出社率・オフィス回帰の促進"},
+      {value:"人材採用力の強化"},{value:"ハイブリッドワークへの対応"},
+      {value:"セキュリティ・BCP対策の強化"}]},
+    tail:[{key:"backgroundOther",label:"その他（自由記述）",wide:true}] },
+
+  { id:"people", no:"03", en:"HEADCOUNT", title:"人員・座席",
+    fields:[
+      {key:"headNow",label:"現在の人数",type:"number",ph:"名"},
+      {key:"headMove",label:"入居時の想定人数",type:"number",ph:"名"},
+      {key:"headFuture",label:"将来（3年後目安）の想定人数",type:"number",ph:"名"}],
+    chipGroups:[
+      {group:"seatType",mode:"multi",label:"座席タイプ（複数選択可）",
+        items:["固定席中心","フリーアドレス","個室中心"]},
+      {group:"parking",mode:"radio",label:"駐車場・駐輪場",
+        items:["必要","不要","検討中"]}
+    ],
+    tail:[{key:"seatTypeOther",label:"その他（自由記述）",wide:true}] },
+
+  { id:"image", no:"04", en:"IMAGE", title:"求める空間イメージ",
+    hint:"近いイメージを選んでください（複数選択可）",
+    moods:[
+      {value:"ラグジュアリーオフィス",caption:"ラグジュアリー",swatch:"linear-gradient(135deg, transparent 47%, #C9A25B 49%, #C9A25B 51%, transparent 53%), linear-gradient(150deg, #2A2019 0%, #17120E 60%, #221A14 100%)"},
+      {value:"ナチュラル",caption:"ナチュラル",swatch:"radial-gradient(circle at 26% 30%, rgba(139,163,101,.65) 0%, transparent 46%), radial-gradient(circle at 74% 68%, rgba(201,166,107,.55) 0%, transparent 50%), linear-gradient(160deg, #EFE6D3 0%, #DBCBA5 100%)"},
+      {value:"先進的",caption:"先進的",swatch:"repeating-linear-gradient(0deg, rgba(93,201,255,.22) 0 1px, transparent 1px 17px), repeating-linear-gradient(90deg, rgba(93,201,255,.16) 0 1px, transparent 1px 17px), linear-gradient(160deg, #10151D 0%, #1D2733 100%)"},
+      {value:"モノトーン",caption:"モノトーン",swatch:"linear-gradient(115deg, #101010 0% 45%, #9B9B9B 45% 55%, #FAFAFA 55% 100%)"},
+      {value:"モダン",caption:"モダン",swatch:"linear-gradient(100deg, #F1EFE9 0% 54%, #2E5FA3 54% 77%, #17140F 77% 100%)"}],
+    photos:true,
+    tail:[{key:"imageOther",label:"その他",wide:true,ph:"上の5つに近いものがなければ、言葉で記入してください"}] },
+
+  { id:"areas", no:"05", en:"PROGRAM", title:"必要な機能・エリア",
+    hint:"必要な項目をチェックし、数量があれば入力してください",
+    checks:{group:"areas",min:340,items:[
+      {value:"エントランス・受付"},
+      {value:"大会議室",rooms:{key:"bigMeeting",capUnit:"名用",countUnit:"室",capPh:"10",countPh:"1"}},
+      {value:"小会議室",rooms:{key:"smallMeeting",capUnit:"名用",countUnit:"室",capPh:"4",countPh:"2"}},
+      {value:"フォンブース",qty:[{key:"capPhoneBooth",unit:"名用",ph:"1"},{key:"qtyPhoneBooth",unit:"個",ph:"2"}]},
+      {value:"集中ワークブース"},{value:"リフレッシュ・カフェスペース"},
+      {value:"役員室・応接室"},{value:"サーバー・IT機器室"},
+      {value:"倉庫・書庫・ロッカー"}]},
+    chipGroups:[
+      {group:"furnitureReuse",mode:"radio",label:"什器：新規購入／現行流用",
+        items:["新規購入","一部流用","全て流用","未定"]}
+    ],
+    tail:[{key:"areaOther",label:"その他のエリア",wide:true}] },
+
+  { id:"equipment", no:"06", en:"SYSTEMS", title:"設備・技術要件",
+    checks:{group:"equipment",min:280,items:[
+      {value:"入退室管理・セキュリティゲート"},
+      {value:"防音・音響対策"},
+      {value:"個別空調・温度管理"},
+      {value:"環境配慮設備（断熱・省エネ等）"},{value:"バリアフリー対応"}]} },
+
+  { id:"priorities", no:"07", en:"PRIORITY", title:"優先要件",
+    hint:"優先順位の判断材料になります（複数選択可）",
+    checks:{group:"priorities",min:280,items:[
+      {value:"予算を守ること"},{value:"スケジュールを守ること"},
+      {value:"デザイン性・ブランド表現"},{value:"機能性・使いやすさ"},
+      {value:"環境性能・サステナビリティ"},{value:"社員の声の反映"},{value:"セキュリティ"}]},
+    tail:[{key:"priorityOther",label:"その他（自由記述）",wide:true}] },
+
+  { id:"process", no:"08", en:"PROCESS", title:"進め方・体制",
+    hint:"検討の進め方について、わかる範囲でご記入ください",
+    fields:[
+      {key:"decisionMaker",label:"意思決定の体制（決裁者・承認フロー）",type:"textarea",wide:true,
+        ph:"例：総務部長が一次判断、最終は役員会で承認"},
+      {key:"siteVisit",label:"現地調査（採寸・下見）の可否・希望時期",ph:"例：可能。9月中旬以降で調整したい"},
+      {key:"moveSchedule",label:"引っ越し・什器搬入のスケジュール制約",type:"textarea",wide:true,
+        ph:"例：土日のみ搬入可、〇月末までに現オフィス退去 等"}
+    ],
+    chipGroups:[
+      {group:"proposalFormat",mode:"multi",label:"希望する提案形式（複数選択可）",
+        items:["プレゼン資料","模型","VR・パース","現地サンプル"]}
+    ] },
+
+  { id:"notes", no:"09", en:"NOTES", title:"特記事項・図面希望日",
+    fields:[
+      {key:"notes",label:"面談メモ・特記事項",type:"textarea",wide:true,ph:"面談中に出てきた補足事項、気になる点などを自由に記入"},
+      {key:"testFitDate",label:"テストフィット希望日",type:"date",note:"※都合によって日程前後する場合ございます"}] }
+];
+
+var REVIEW_STEP = SECTIONS.length; // レビュー画面のインデックス
+var STEP_TOTAL = SECTIONS.length + 1;
+
+var MOOD_GROUP = "imageKeywords";
+var STORAGE_KEY = "miyakobo_office_hearing_checksheet_v3";
+var MAX_IMAGES = 5, MAX_IMAGE_BYTES = 8*1024*1024;
+
+var SAMPLE = {
+  checks:{
+    background:["人員増加で手狭になった","ブランドイメージの刷新","ハイブリッドワークへの対応"],
+    seatType:["フリーアドレス"],
+    imageKeywords:["先進的","モダン","モノトーン"],
+    areas:["大会議室","小会議室","フォンブース","集中ワークブース","リフレッシュ・カフェスペース"],
+    equipment:["個別空調・温度管理","防音・音響対策"],
+    priorities:["デザイン性・ブランド表現","スケジュールを守ること"],
+    proposalFormat:["プレゼン資料","VR・パース"]
+  },
+  radio:{projectType:"移転",contractType:"賃貸",parking:"検討中",furnitureReuse:"一部流用"},
+  rooms:{
+    bigMeeting:[{cap:"10",count:"1"}],
+    smallMeeting:[{cap:"4",count:"2"},{cap:"6",count:"1"}]
+  },
+  text:{
+    caseName:"（サンプル）本社移転プロジェクト", company:"ミライ商事株式会社",
+    contact:"総務部 山田様", address:"東京都千代田区（現オフィス）",
+    moveDate:"2027年4月", budget:"5,000万円", sizeNote:"800坪",
+    headNow:"80", headMove:"120", headFuture:"160",
+    imageOther:"外資系企業のオープンオフィスを参考にしたい",
+    notes:"社員アンケートで「集中できる場所が欲しい」という声が多数あった。",
+    capPhoneBooth:"1", qtyPhoneBooth:"4",
+    decisionMaker:"総務部長が一次判断、最終は役員会で承認",
+    siteVisit:"可能。9月中旬以降で調整したい",
+    moveSchedule:"土日のみ搬入可、契約終了までに現オフィス退去が必要"
+  }
+};
+
+/* ─────────────────────────────────────────────
+   2. 状態
+   ───────────────────────────────────────────── */
+var TOKEN = (function(){
+  try{ return new URLSearchParams(location.search).get("c") || ""; }catch(e){ return ""; }
+})();
+var state = null, usingSample = false, step = 0, photos = [], submitting = false;
+
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); };
+
+function load(){
+  try{ var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ var p = JSON.parse(raw); if(p && p.checks && p.text){ p.rooms = p.rooms || {}; p.radio = p.radio || {}; return p; } } }catch(e){}
+  return null;
+}
+function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function copy(o){ return JSON.parse(JSON.stringify(o)); }
+
+function allChipGroups(sec){ return sec.chipGroups || []; }
+
+function filledSection(sec){
+  var t = state.text;
+  var has = function(k){ return !!(t[k] && String(t[k]).trim()); };
+  var any = function(arr){ return (arr||[]).some(function(f){ return has(f.key); }); };
+  if(any(sec.fields) || any(sec.tail)) return true;
+  var chipsFilled = allChipGroups(sec).some(function(g){
+    return g.mode === "radio" ? !!state.radio[g.group] : (state.checks[g.group]||[]).length>0;
+  });
+  if(chipsFilled) return true;
+  if(sec.checks && (state.checks[sec.checks.group]||[]).length) return true;
+  if(sec.moods && (state.checks[MOOD_GROUP]||[]).length) return true;
+  return false;
+}
+
+/* ─────────────────────────────────────────────
+   3. サマリー文の生成
+   ───────────────────────────────────────────── */
+function bulletBlock(title, items){
+  if(!items || !items.length) return "";
+  return "■ " + title + "\n" + items.map(function(i){ return "・" + i; }).join("\n");
+}
+function buildSummary(){
+  var t = state.text, blocks = [];
+
+  var ov = [], head = [t.caseName,t.company].filter(Boolean).join("　");
+  if(head) ov.push(head);
+  var who = [t.contact?"ご担当："+t.contact:"", t.address?"所在地："+t.address:""].filter(Boolean).join("　");
+  if(who) ov.push(who);
+  var meta = [];
+  if(state.radio.projectType) meta.push("種別："+state.radio.projectType);
+  if(state.radio.contractType) meta.push("契約形態："+state.radio.contractType);
+  if(t.moveDate) meta.push("入居希望："+t.moveDate);
+  if(t.budget) meta.push("予算："+t.budget);
+  if(t.sizeNote) meta.push("面積："+t.sizeNote);
+  if(meta.length) ov.push(meta.join("　"));
+  if(ov.length) blocks.push("■ 案件概要\n"+ov.join("\n"));
+
+  var bg = (state.checks.background||[]).slice();
+  if(t.backgroundOther) bg.push(t.backgroundOther+"（自由記述）");
+  if(bulletBlock("検討の背景",bg)) blocks.push(bulletBlock("検討の背景",bg));
+
+  var hc = [];
+  if(t.headNow) hc.push("現在"+t.headNow+"名");
+  if(t.headMove) hc.push("入居時"+t.headMove+"名");
+  if(t.headFuture) hc.push("将来(3年後目安)"+t.headFuture+"名");
+  var seats = (state.checks.seatType||[]).slice();
+  if(t.seatTypeOther) seats.push(t.seatTypeOther);
+  var pl = [];
+  if(hc.length) pl.push(hc.join(" → "));
+  if(seats.length) pl.push("座席タイプ："+seats.join("、"));
+  if(state.radio.parking) pl.push("駐車場・駐輪場："+state.radio.parking);
+  if(pl.length) blocks.push("■ 人員・座席\n"+pl.join("\n"));
+
+  var img = (state.checks[MOOD_GROUP]||[]).slice(), il = [];
+  if(img.length) il.push(img.join("、"));
+  if(t.imageOther) il.push("参考・その他："+t.imageOther);
+  if(il.length) blocks.push("■ 求める空間イメージ\n"+il.join("\n"));
+
+  function withQty(name,cap,capUnit,count,countUnit){
+    var parts = [];
+    if(cap) parts.push(cap+capUnit);
+    if(count) parts.push(count+countUnit);
+    return parts.length ? name+"（"+parts.join("・")+"）" : name;
+  }
+  function roomsSummary(name, rows, capUnit, countUnit){
+    var list = (rows||[]).filter(function(r){ return r && (r.cap || r.count); });
+    if(!list.length) return name;
+    var parts = list.map(function(r){
+      var p = [];
+      if(r.cap) p.push(r.cap+capUnit);
+      if(r.count) p.push(r.count+countUnit);
+      return p.join("・");
+    });
+    return name+"（"+parts.join("、")+"）";
+  }
+  var areaItems = (state.checks.areas||[]).map(function(a){
+    if(a==="大会議室") return roomsSummary(a,state.rooms.bigMeeting,"名用","室");
+    if(a==="小会議室") return roomsSummary(a,state.rooms.smallMeeting,"名用","室");
+    if(a==="フォンブース") return withQty(a,t.capPhoneBooth,"名用",t.qtyPhoneBooth,"個");
+    return a;
+  });
+  if(t.areaOther) areaItems.push(t.areaOther);
+  if(state.radio.furnitureReuse) areaItems.push("什器："+state.radio.furnitureReuse);
+  if(bulletBlock("必要な機能・エリア",areaItems)) blocks.push(bulletBlock("必要な機能・エリア",areaItems));
+
+  if(bulletBlock("設備・技術要件",state.checks.equipment)) blocks.push(bulletBlock("設備・技術要件",state.checks.equipment));
+
+  var pr = (state.checks.priorities||[]).slice();
+  if(t.priorityOther) pr.push(t.priorityOther+"（自由記述）");
+  if(bulletBlock("優先要件",pr)) blocks.push(bulletBlock("優先要件",pr));
+
+  var proc = [];
+  if(t.decisionMaker) proc.push("意思決定体制："+t.decisionMaker);
+  if(t.siteVisit) proc.push("現地調査："+t.siteVisit);
+  if((state.checks.proposalFormat||[]).length) proc.push("希望する提案形式："+state.checks.proposalFormat.join("、"));
+  if(t.moveSchedule) proc.push("スケジュール制約："+t.moveSchedule);
+  if(proc.length) blocks.push("■ 進め方・体制\n"+proc.join("\n"));
+
+  if(t.notes) blocks.push("■ その他メモ\n"+t.notes);
+
+  if(t.testFitDate){
+    blocks.push("■ 図面希望日\nテストフィット希望日："+t.testFitDate);
+  }
+  return blocks.join("\n\n");
+}
+
+/* ─────────────────────────────────────────────
+   4. 描画
+   ───────────────────────────────────────────── */
+function fieldHtml(f){
+  var v = esc(state.text[f.key]==null ? "" : state.text[f.key]);
+  var ph = esc(f.ph||"");
+  var inner = f.type === "textarea"
+    ? '<textarea data-key="'+f.key+'" rows="4" placeholder="'+ph+'">'+v+'</textarea>'
+    : '<input type="'+(f.type||"text")+'" data-key="'+f.key+'" value="'+v+'" placeholder="'+ph+'">';
+  var note = f.note ? '<small class="fieldnote">'+esc(f.note)+'</small>' : '';
+  return '<label class="field'+(f.wide?" wide":"")+'"><span>'+esc(f.label)+'</span>'+inner+note+'</label>';
+}
+
+function chipGroupHtml(g){
+  var isRadio = g.mode === "radio";
+  return '<div class="chipgroup"><div class="grouplabel">'+esc(g.label)+'</div><div class="chips">'
+    + g.items.map(function(v){
+        var on = isRadio ? state.radio[g.group]===v : (state.checks[g.group]||[]).indexOf(v)!==-1;
+        return '<label class="chip'+(on?" on":"")+'">'
+          + '<input type="'+(isRadio?"radio":"checkbox")+'" name="'+g.group+'" data-chip="'+g.group+'" data-mode="'
+          + g.mode+'" value="'+esc(v)+'"'+(on?" checked":"")+'><span>'+esc(v)+'</span></label>';
+      }).join("")
+    + '</div></div>';
+}
+
+function sectionHtml(sec){
+  var h = "";
+  if(sec.hint) h += '<div class="hint">'+esc(sec.hint)+'</div>';
+
+  if(sec.fields) h += '<div class="grid">'+sec.fields.map(fieldHtml).join("")+'</div>';
+
+  allChipGroups(sec).forEach(function(g){ h += chipGroupHtml(g); });
+
+  if(sec.checks){
+    var cg = sec.checks.group, list = state.checks[cg]||[];
+    h += '<div class="checks" style="grid-template-columns:repeat(auto-fill,minmax('+(sec.checks.min||280)+'px,1fr))">'
+      + sec.checks.items.map(function(it){
+          var on = list.indexOf(it.value)!==-1;
+          if(it.rooms){
+            var rk = it.rooms.key;
+            var rows = (state.rooms[rk] && state.rooms[rk].length) ? state.rooms[rk] : [{cap:"",count:""}];
+            var rowsHtml = rows.map(function(r,idx){
+              var capV = esc(r.cap||""), countV = esc(r.count||"");
+              return '<div class="room-row">'
+                + '<span class="qty"><input type="number" data-room="'+rk+'" data-idx="'+idx+'" data-field="cap" value="'
+                  + capV+'" placeholder="'+esc(it.rooms.capPh)+'"'+(on?"":" disabled")+'><span>'+esc(it.rooms.capUnit)+'</span></span>'
+                + '<span class="qty"><input type="number" data-room="'+rk+'" data-idx="'+idx+'" data-field="count" value="'
+                  + countV+'" placeholder="'+esc(it.rooms.countPh)+'"'+(on?"":" disabled")+'><span>'+esc(it.rooms.countUnit)+'</span></span>'
+                + (on && rows.length>1 ? '<button type="button" class="room-del" data-room="'+rk+'" data-idx="'+idx+'" aria-label="この行を削除">×</button>' : '')
+                + '</div>';
+            }).join("");
+            return '<div class="check-item'+(on?" on":"")+'">'
+              + '<label class="check'+(on?" on":"")+'">'
+              +   '<input type="checkbox" data-group="'+cg+'" value="'+esc(it.value)+'"'+(on?" checked":"")+'>'
+              +   '<span class="txt">'+esc(it.value)+'</span>'
+              + '</label>'
+              + '<div class="rooms">'+rowsHtml
+              +   (on ? '<button type="button" class="room-add" data-room="'+rk+'">＋ 部屋を追加</button>' : '')
+              + '</div>'
+              + '</div>';
+          }
+          var q = (it.qty||[]).map(function(x){
+            var val = esc(state.text[x.key]==null?"":state.text[x.key]);
+            return '<span class="qty"><input type="number" data-key="'+x.key+'" value="'+val+'" placeholder="'
+              + esc(x.ph)+'"'+(on?"":" disabled")+'><span>'+esc(x.unit)+'</span></span>';
+          }).join("");
+          return '<label class="check'+(on?" on":"")+'">'
+            + '<input type="checkbox" data-group="'+cg+'" value="'+esc(it.value)+'"'+(on?" checked":"")+'>'
+            + '<span class="txt">'+esc(it.value)+'</span>'
+            + (q?'<span class="qtys">'+q+'</span>':'')
+            + '</label>';
+        }).join("")
+      + '</div>';
+  }
+
+  if(sec.moods){
+    var ml = state.checks[MOOD_GROUP]||[];
+    h += '<div class="moods">'
+      + sec.moods.map(function(m){
+          var on = ml.indexOf(m.value)!==-1;
+          return '<label class="mood'+(on?" on":"")+'">'
+            + '<input type="checkbox" data-group="'+MOOD_GROUP+'" value="'+esc(m.value)+'"'+(on?" checked":"")+'>'
+            + '<span class="tile bp"><i class="corner tl"></i><i class="corner br"></i>'
+            + '<span class="swatch" style="background:'+m.swatch+'"></span>'
+            + '<span class="cap">'+esc(m.caption)+'</span></span></label>';
+        }).join("")
+      + '</div>';
+  }
+
+  if(sec.photos){
+    h += '<div style="margin-top:26px"><div class="grouplabel">参考写真（あれば）</div>'
+      + '<div class="photos" id="photos"><label class="photo-add" for="photoInput">＋ 写真を追加</label>'
+      + '<input id="photoInput" type="file" accept="image/*" multiple hidden></div>'
+      + '<div class="note">送信すると自動でメールに添付されます（5枚まで・1枚8MBまで）</div></div>';
+  }
+
+  if(sec.tail) h += '<div class="grid sub">'+sec.tail.map(fieldHtml).join("")+'</div>';
+  return h;
+}
+
+function reviewHtml(){
+  var s = buildSummary();
+  var linkNote = TOKEN
+    ? '<div class="hint" style="margin:0 0 4px">専用リンク経由での送信です。宛先やお名前を偽って表示することはできません。</div>'
+    : '';
+  return '<div style="display:flex;flex-direction:column;gap:18px">'
+    + linkNote
+    + '<div class="hint" style="margin:0">ここまでの内容が、下の文章にまとまっています。お客様と読み合わせてから送信してください。</div>'
+    + '<div class="spec bp"><i class="corner tl"></i><i class="corner br"></i>'
+    +   '<div class="head"><h2>要件サマリー</h2><span class="en">Requirement Spec</span></div>'
+    +   '<textarea id="summaryText" readonly placeholder="チェックを入れると、ここに要件がまとまっていきます。">'+esc(s)+'</textarea>'
+    + '</div>'
+    + '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+    +   '<button class="btn btn-solid" id="submitBtn" type="button" style="flex:1 1 300px;padding:15px 18px;font-size:16px">送信する（石川さんに届きます）</button>'
+    +   '<button class="btn" id="copyBtn" type="button" style="padding:15px 20px">コピー</button>'
+    +   '<button class="btn" id="resetBtn" type="button" style="padding:15px 20px">クリア</button>'
+    + '</div>'
+    + '<div class="status" id="submitStatus" aria-live="polite"></div>'
+    + '<div class="note">入力内容はこの端末にのみ自動保存されます。送信すると要件サマリーが宮工房（'+esc(NOTIFY_EMAIL)+'）に届き、記録として保存されます。</div>'
+    + '</div>';
+}
+
+function renderRail(){
+  var html = SECTIONS.map(function(s,i){
+    return '<button class="step'+(i===step?" on":"")+(filledSection(s)?" done":"")+'" data-i="'+i+'" type="button">'
+      + '<span class="no">'+s.no+'</span><span class="lbl">'+esc(s.title)+'</span><span class="dot"></span></button>';
+  }).join("");
+  html += '<button class="step send'+(step===REVIEW_STEP?" on":"")+'" data-i="'+REVIEW_STEP+'" type="button">'
+       + '<span class="no">→</span><span class="lbl">確認して送信</span><span class="dot"></span></button>';
+  $("steps").innerHTML = html;
+  $("filledCount").textContent = String(SECTIONS.filter(filledSection).length).padStart(2,"0");
+  $("stepTotalLbl").textContent = "/ "+String(SECTIONS.length).padStart(2,"0")+" 記入済";
+
+  $("ticks").innerHTML = SECTIONS.concat([{}]).map(function(s,i){
+    var cls = "tick" + (i===step?" on":(SECTIONS[i]&&filledSection(SECTIONS[i])?" done":""));
+    return '<span class="'+cls+'"></span>';
+  }).join("");
+  $("stepLabel").textContent = String(step+1).padStart(2,"0")+" / "+String(STEP_TOTAL).padStart(2,"0");
+  $("prevBtn").disabled = step===0;
+  $("nextBtn").disabled = step===REVIEW_STEP;
+  $("nextBtn").textContent = (step===REVIEW_STEP-1?"確認へ":"次へ")+" →";
+
+  $("modeBadge").textContent = TOKEN ? "専用リンク経由" : "社内利用モード";
+}
+
+function render(){
+  var isReview = step===REVIEW_STEP, sec = SECTIONS[step];
+  $("stepNo").textContent = isReview ? "→" : sec.no;
+  $("stepEn").textContent = isReview ? "Review & Send" : sec.en;
+  $("stepTitle").textContent = isReview ? "確認して送信" : sec.title;
+
+  var banner = (usingSample && !isReview)
+    ? '<div class="banner"><span>サンプル入力を表示中です（実在の案件ではありません）。</span>'
+      + '<button class="btn btn-sm" id="freshBtn" type="button">空の状態ではじめる</button></div>' : "";
+
+  $("content").innerHTML = banner + (isReview ? reviewHtml() : sectionHtml(sec));
+  if(sec && sec.photos) renderPhotos();
+  renderRail();
+  $("drawerText").value = buildSummary();
+}
+
+/* ─────────────────────────────────────────────
+   5. 入力ハンドリング
+   ───────────────────────────────────────────── */
+function touched(){ if(usingSample){ usingSample = false; } }
+
+function onChange(e){
+  var el = e.target;
+  if(el.matches('input[data-group]')){
+    touched();
+    var g = el.getAttribute("data-group"), v = el.value;
+    var list = (state.checks[g]||[]).slice(), i = list.indexOf(v);
+    if(el.checked && i===-1) list.push(v);
+    if(!el.checked && i!==-1) list.splice(i,1);
+    state.checks[g] = list;
+    if(!el.checked){
+      var sec = SECTIONS.filter(function(s){ return s.checks && s.checks.group===g; })[0];
+      var item = sec ? sec.checks.items.filter(function(x){ return x.value===v; })[0] : null;
+      if(item && item.qty) item.qty.forEach(function(q){ state.text[q.key] = ""; });
+      if(item && item.rooms) state.rooms[item.rooms.key] = [];
+    }
+    save(); render(); return;
+  }
+  if(el.hasAttribute("data-room")){
+    touched();
+    var rk = el.getAttribute("data-room"), idx = Number(el.getAttribute("data-idx")), field = el.getAttribute("data-field");
+    var arr = (state.rooms[rk]||[]).slice();
+    while(arr.length <= idx) arr.push({cap:"",count:""});
+    arr[idx] = { cap: field==="cap" ? el.value : (arr[idx].cap||""), count: field==="count" ? el.value : (arr[idx].count||"") };
+    state.rooms[rk] = arr;
+    save();
+    $("drawerText").value = buildSummary();
+    var st2 = $("summaryText"); if(st2) st2.value = buildSummary();
+    renderRail();
+    return;
+  }
+  if(el.matches('input[data-chip]')){
+    touched();
+    var cg = el.getAttribute("data-chip");
+    if(el.getAttribute("data-mode")==="radio"){ state.radio[cg] = el.value; }
+    else{
+      var l2 = (state.checks[cg]||[]).slice(), j = l2.indexOf(el.value);
+      if(el.checked && j===-1) l2.push(el.value);
+      if(!el.checked && j!==-1) l2.splice(j,1);
+      state.checks[cg] = l2;
+    }
+    save(); render(); return;
+  }
+  if(el.hasAttribute("data-key")){
+    touched();
+    state.text[el.getAttribute("data-key")] = el.value;
+    save();
+    $("drawerText").value = buildSummary();
+    var st = $("summaryText"); if(st) st.value = buildSummary();
+    renderRail();
+  }
+}
+
+$("content").addEventListener("change", onChange);
+$("content").addEventListener("input", function(e){
+  if(e.target.hasAttribute && (e.target.hasAttribute("data-key") || e.target.hasAttribute("data-room"))) onChange(e);
+});
+
+$("content").addEventListener("click", function(e){
+  var t = e.target;
+  if(t.id === "freshBtn"){ startFresh(); }
+  if(t.id === "copyBtn"){ doCopy($("summaryText"), t); }
+  if(t.id === "resetBtn"){ doReset(t); }
+  if(t.id === "submitBtn"){ doSubmit(); }
+  if(t.classList && t.classList.contains("room-add")){
+    touched();
+    var rk = t.getAttribute("data-room");
+    var arr = (state.rooms[rk]||[]).slice();
+    if(!arr.length) arr.push({cap:"",count:""});
+    arr.push({cap:"",count:""});
+    state.rooms[rk] = arr;
+    save(); render();
+  }
+  if(t.classList && t.classList.contains("room-del")){
+    touched();
+    var rk2 = t.getAttribute("data-room"), idx2 = Number(t.getAttribute("data-idx"));
+    var arr2 = (state.rooms[rk2]||[]).slice();
+    arr2.splice(idx2,1);
+    state.rooms[rk2] = arr2;
+    save(); render();
+  }
+});
+
+$("steps").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-i]");
+  if(!b) return;
+  step = Number(b.getAttribute("data-i"));
+  render(); window.scrollTo(0,0);
+});
+$("prevBtn").addEventListener("click", function(){ step = Math.max(0,step-1); render(); window.scrollTo(0,0); });
+$("nextBtn").addEventListener("click", function(){ step = Math.min(REVIEW_STEP,step+1); render(); window.scrollTo(0,0); });
+
+$("drawerBtn").addEventListener("click", function(){ $("drawerText").value = buildSummary(); $("backdrop").classList.add("open"); });
+$("drawerClose").addEventListener("click", function(){ $("backdrop").classList.remove("open"); });
+$("backdrop").addEventListener("click", function(e){ if(e.target === $("backdrop")) $("backdrop").classList.remove("open"); });
+$("drawerCopy").addEventListener("click", function(){ doCopy($("drawerText"), $("drawerCopy")); });
+
+function startFresh(){
+  state = {checks:{},radio:{},text:{},rooms:{}};
+  usingSample = false; photos = [];
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  render();
+}
+
+var resetArmed = false, resetTimer = null;
+function doReset(btn){
+  if(!resetArmed){
+    resetArmed = true; btn.textContent = "本当にクリア？";
+    resetTimer = setTimeout(function(){ resetArmed = false; btn.textContent = "クリア"; }, 4000);
+    return;
+  }
+  clearTimeout(resetTimer); resetArmed = false;
+  startFresh();
+}
+
+function doCopy(area, btn){
+  var text = area ? area.value : buildSummary();
+  var label = btn.textContent;
+  var done = function(msg){ btn.textContent = msg; setTimeout(function(){ btn.textContent = label; }, 2400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ done("コピーしました"); }, function(){ done("コピーできません"); });
+  } else { done("コピーできません"); }
+}
+
+/* 写真 */
+function renderPhotos(){
+  var wrap = $("photos"); if(!wrap) return;
+  wrap.querySelectorAll(".photo").forEach(function(n){ n.remove(); });
+  photos.forEach(function(p, idx){
+    var d = document.createElement("div");
+    d.className = "photo";
+    d.style.backgroundImage = "url("+p.url+")";
+    d.title = p.name;
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = "×"; b.setAttribute("aria-label","この写真を削除");
+    b.addEventListener("click", function(){ photos.splice(idx,1); renderPhotos(); });
+    d.appendChild(b);
+    wrap.appendChild(d);
+  });
+  var input = $("photoInput");
+  if(input && !input._bound){
+    input._bound = true;
+    input.addEventListener("change", function(){
+      Array.prototype.slice.call(input.files||[]).forEach(function(f){
+        if(photos.length >= MAX_IMAGES) return;
+        if(f.size > MAX_IMAGE_BYTES) return;
+        photos.push({file:f, url:URL.createObjectURL(f), name:f.name});
+      });
+      input.value = "";
+      renderPhotos();
+    });
+  }
+}
+
+/* ─────────────────────────────────────────────
+   6. 送信（Google Apps Script Web App 経由）
+   ───────────────────────────────────────────── */
+function setStatus(kind, text){
+  var el = $("submitStatus"); if(!el) return;
+  el.className = "status" + (kind ? " " + kind : "");
+  el.textContent = text;
+}
+
+function fileToBase64(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(){
+      var r = reader.result || "", i = r.indexOf(",");
+      resolve(i === -1 ? r : r.slice(i+1));
+    };
+    reader.onerror = function(){ reject(reader.error); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function doSubmit(){
+  if(submitting) return;
+  var summaryText = buildSummary();
+  if(!summaryText){ setStatus("err","内容が空です。チェックか入力をしてから送信してください。"); return; }
+  if(!GAS_WEBAPP_URL){ setStatus("err","送信先が未設定です（管理者向け：index.html の GAS_WEBAPP_URL を設定してください）"); return; }
+
+  submitting = true;
+  $("submitBtn").disabled = true;
+  setStatus(null, photos.length ? "写真をアップロード中…" : "送信中…");
+
+  Promise.all(photos.map(function(p){
+    return fileToBase64(p.file).then(function(content){
+      return { filename:p.name, mimeType:p.file.type || "application/octet-stream", content:content };
+    });
+  })).then(function(imageAttachments){
+    var payload = {
+      token: TOKEN,
+      checks: state.checks, radio: state.radio, text: state.text, rooms: state.rooms,
+      summaryText: summaryText,
+      submittedAt: new Date().toISOString(),
+      photos: imageAttachments
+    };
+    setStatus(null,"送信中…");
+    // GAS Web App へのCORSプリフライトを避けるため text/plain で送り、
+    // 受け側（doPost）で JSON.parse(e.postData.contents) する前提。
+    return fetch(GAS_WEBAPP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+  }).then(function(res){
+    if(!res.ok) throw new Error("http_"+res.status);
+    return res.json().catch(function(){ return {ok:true}; });
+  }).then(function(json){
+    if(json && json.ok === false) throw new Error(json.error || "server_error");
+    setStatus("ok","送信しました（"+NOTIFY_EMAIL+"）");
+    photos = []; renderPhotos();
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  }).catch(function(err){
+    setStatus("err","送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。（"+(err&&err.message?err.message:"")+"）");
+  }).then(function(){
+    submitting = false; if($("submitBtn")) $("submitBtn").disabled = false;
+  });
+}
+
+/* 起動 */
+var saved = load();
+if(saved){ state = saved; usingSample = false; }
+else { state = copy(SAMPLE); usingSample = true; }
+render();
+
+})();
+</script>
+</body>
+</html>

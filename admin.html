@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回答一覧（管理者用）｜宮工房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#f2f2f3; --surface:#e9e9ea; --ink:#1d1f20; --paper:#ffffff;
+    --accent:#5980a6; --accent-100:#eef6ff; --accent-200:#d6ebff; --accent-600:#597ea3;
+    --accent-700:#416180; --accent-900:#1d2d3d;
+    --divider:rgba(29,31,32,.16); --divider2:rgba(29,31,32,.32); --muted:rgba(29,31,32,.62);
+    --head:"Barlow Condensed","Noto Sans JP",sans-serif;
+    --body:"Barlow","Noto Sans JP",system-ui,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  input,textarea,button{font:inherit;color:inherit}
+  h1,h2,h3{font-family:var(--head);font-weight:600;margin:0}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .bp{position:relative}
+  .bp>.corner{position:absolute;width:11px;height:11px;color:rgba(29,31,32,.45)}
+  .bp>.corner::before{content:"";position:absolute;left:5px;top:0;width:1px;height:100%;background:currentColor}
+  .bp>.corner::after{content:"";position:absolute;top:5px;left:0;width:100%;height:1px;background:currentColor}
+  .bp>.corner.tl{top:-6px;left:-6px} .bp>.corner.tr{top:-6px;right:-6px}
+  .bp>.corner.bl{bottom:-6px;left:-6px} .bp>.corner.br{bottom:-6px;right:-6px}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 24px 60px}
+  .top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;
+       border-bottom:1px solid var(--ink);padding-bottom:16px;margin-bottom:26px}
+  .kicker{font-family:var(--head);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+  .top h1{font-size:30px;margin-top:4px}
+  .btn{border:1px solid var(--divider2);background:transparent;color:var(--ink);padding:9px 16px;
+       font-family:var(--head);font-size:13.5px;letter-spacing:.04em;cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent-700)}
+  .btn-solid{background:var(--accent);border-color:var(--accent);color:#fbfcfd}
+  .btn-solid:hover{background:var(--accent-600);border-color:var(--accent-600);color:#fbfcfd}
+
+  /* gate */
+  .gate{max-width:420px;margin:14vh auto;padding:30px;border:1px solid var(--divider2);background:var(--paper)}
+  .gate p{font-size:13px;color:var(--muted);margin:0 0 18px}
+  .gate input{width:100%;border:1px solid var(--divider2);background:var(--surface);padding:11px 13px;
+              font-size:16px;margin-bottom:14px}
+  .gate .err{color:#b3382c;font-size:13px;min-height:18px;margin-bottom:10px}
+
+  /* filters */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .filters input{border:1px solid var(--divider2);background:var(--paper);padding:9px 12px;font-size:14px;min-width:200px}
+
+  /* table */
+  .tablewrap{border:1px solid var(--divider2);background:var(--paper);overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:760px}
+  th{text-align:left;font-family:var(--head);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+     color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--ink);background:var(--surface);
+     position:sticky;top:0}
+  td{padding:11px 14px;border-bottom:1px solid var(--divider);vertical-align:top}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--accent-100)}
+  .tag{display:inline-flex;font-size:11px;padding:3px 9px;border:1px solid var(--accent);color:var(--accent-700)}
+  .empty{padding:40px;text-align:center;color:var(--muted);font-size:14px}
+
+  /* detail panel */
+  .backdrop{position:fixed;inset:0;background:rgba(29,31,32,.45);display:none;align-items:flex-start;
+            justify-content:center;padding:40px 16px;overflow:auto;z-index:30}
+  .backdrop.open{display:flex}
+  .panel{width:min(720px,100%);background:var(--paper);border:1px solid var(--ink)}
+  .panel .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+               padding:22px 26px;border-bottom:1px solid var(--divider)}
+  .panel .head h2{font-size:22px}
+  .panel .body{padding:22px 26px}
+  .panel .summary{white-space:pre-wrap;font-family:ui-monospace,"SFMono-Regular",Menlo,"Noto Sans JP",monospace;
+                  font-size:13px;line-height:1.9;background:var(--accent-900);color:#ececee;padding:20px}
+  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 18px;margin-bottom:18px;font-size:13px}
+  .meta div span{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+  .photos{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .photos a{display:block;width:88px;height:88px;background-size:cover;background-position:center;
+            border:1px solid var(--divider2)}
+  .status{font-size:13px;color:var(--muted);margin:16px 0}
+</style>
+</head>
+<body>
+
+<div class="gate bp" id="gate">
+  <i class="corner tl"></i><i class="corner br"></i>
+  <div class="kicker">Miyakobo Admin</div>
+  <h1 style="font-size:22px;margin-top:8px 0 14px">管理者パスワード</h1>
+  <p>回答一覧は、社内の管理者のみが閲覧できます。</p>
+  <input id="passInput" type="password" placeholder="パスワード" autocomplete="off">
+  <div class="err" id="gateErr"></div>
+  <button class="btn btn-solid" id="gateBtn" type="button" style="width:100%;padding:12px">開く</button>
+</div>
+
+<div class="wrap" id="main" hidden>
+  <div class="top">
+    <div>
+      <div class="kicker">Miyakobo</div>
+      <h1>ヒアリング回答一覧</h1>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" id="reloadBtn" type="button">再読み込み</button>
+      <button class="btn" id="logoutBtn" type="button">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input id="searchInput" type="text" placeholder="会社名・案件名・担当者で検索">
+    <input id="tokenInput" type="text" placeholder="リンクトークンで絞り込み">
+  </div>
+
+  <div class="status" id="listStatus"></div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>受信日時</th><th>会社名</th><th>案件名</th><th>ご担当者</th><th>区分</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" hidden>まだ回答がありません。</div>
+  </div>
+</div>
+
+<div class="backdrop" id="detailBackdrop">
+  <div class="panel bp" id="panel">
+    <i class="corner tl"></i><i class="corner br"></i>
+    <div class="head">
+      <div>
+        <div class="kicker" id="detailKicker"></div>
+        <h2 id="detailTitle"></h2>
+      </div>
+      <button class="btn" id="detailClose" type="button">閉じる</button>
+    </div>
+    <div class="body">
+      <div class="meta" id="detailMeta"></div>
+      <div class="summary" id="detailSummary"></div>
+      <div class="photos" id="detailPhotos"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* gas/Code.gs をデプロイした後のURL（.../exec）を設定してください。README.md参照 */
+var GAS_WEBAPP_URL = "";
+var SESSION_KEY = "miyakobo_admin_pass_v1";
+
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); };
+
+var allRows = [];
+
+function showGate(err){
+  $("gate").style.display = "block";
+  $("main").hidden = true;
+  $("gateErr").textContent = err || "";
+}
+function showMain(){
+  $("gate").style.display = "none";
+  $("main").hidden = false;
+}
+
+function fetchList(pass){
+  var url = GAS_WEBAPP_URL + "?mode=list&pass=" + encodeURIComponent(pass);
+  return fetch(url).then(function(res){
+    if(!res.ok) throw new Error("http_"+res.status);
+    return res.json();
+  }).then(function(json){
+    if(!json || json.ok === false){
+      var code = json && json.error;
+      if(code === "unauthorized") throw new Error("パスワードが違います");
+      throw new Error("読み込みに失敗しました（"+(code||"unknown")+"）");
+    }
+    return json.submissions || [];
+  });
+}
+
+function tryOpen(pass){
+  if(!GAS_WEBAPP_URL){ showGate("送信先が未設定です（管理者向け：admin.html の GAS_WEBAPP_URL を設定してください）"); return; }
+  $("gateBtn").disabled = true;
+  $("gateErr").textContent = "確認中…";
+  fetchList(pass).then(function(rows){
+    allRows = rows;
+    try{ sessionStorage.setItem(SESSION_KEY, pass); }catch(e){}
+    showMain();
+    renderRows();
+  }).catch(function(err){
+    showGate(err.message || "読み込みに失敗しました");
+  }).then(function(){
+    $("gateBtn").disabled = false;
+  });
+}
+
+$("gateBtn").addEventListener("click", function(){ tryOpen($("passInput").value); });
+$("passInput").addEventListener("keydown", function(e){ if(e.key==="Enter") tryOpen($("passInput").value); });
+$("logoutBtn").addEventListener("click", function(){
+  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+  location.reload();
+});
+$("reloadBtn").addEventListener("click", function(){
+  var pass = "";
+  try{ pass = sessionStorage.getItem(SESSION_KEY) || ""; }catch(e){}
+  if(pass) tryOpen(pass);
+});
+
+function currentFilter(){
+  return {
+    q: ($("searchInput").value||"").trim().toLowerCase(),
+    token: ($("tokenInput").value||"").trim().toLowerCase()
+  };
+}
+
+function renderRows(){
+  var f = currentFilter();
+  var rows = allRows.filter(function(r){
+    if(f.token && String(r.token||"").toLowerCase().indexOf(f.token)===-1) return false;
+    if(f.q){
+      var hay = [r.company,r.caseName,r.contact].join(" ").toLowerCase();
+      if(hay.indexOf(f.q)===-1) return false;
+    }
+    return true;
+  }).slice().sort(function(a,b){ return String(b.timestamp||"").localeCompare(String(a.timestamp||"")); });
+
+  $("emptyMsg").hidden = rows.length>0;
+  $("rows").innerHTML = rows.map(function(r,i){
+    var d = r.timestamp ? new Date(r.timestamp) : null;
+    var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
+    return '<tr data-i="'+i+'" data-id="'+esc(r.id||"")+'">'
+      + '<td>'+esc(dstr)+'</td>'
+      + '<td>'+esc(r.company||"（未記入）")+'</td>'
+      + '<td>'+esc(r.caseName||"")+'</td>'
+      + '<td>'+esc(r.contact||"")+'</td>'
+      + '<td>'+(r.token? '<span class="tag">'+esc(r.token)+'</span>' : '<span class="tag">社内</span>')+'</td>'
+      + '</tr>';
+  }).join("");
+  $("listStatus").textContent = rows.length + " 件（全 " + allRows.length + " 件中）";
+
+  Array.prototype.forEach.call($("rows").querySelectorAll("tr"), function(tr){
+    tr.addEventListener("click", function(){
+      var id = tr.getAttribute("data-id");
+      var row = allRows.filter(function(r){ return String(r.id)===id; })[0];
+      if(row) openDetail(row);
+    });
+  });
+}
+$("searchInput").addEventListener("input", renderRows);
+$("tokenInput").addEventListener("input", renderRows);
+
+function openDetail(r){
+  var d = r.timestamp ? new Date(r.timestamp) : null;
+  var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
+  $("detailKicker").textContent = dstr + (r.token ? "　/　リンク: "+r.token : "　/　社内利用");
+  $("detailTitle").textContent = r.caseName || r.company || "（案件名未記入）";
+  $("detailMeta").innerHTML = [
+    ["会社名", r.company], ["ご担当者", r.contact], ["所在地", r.address],
+    ["入居希望", r.moveDate], ["予算", r.budget]
+  ].map(function(p){ return '<div><span>'+esc(p[0])+'</span>'+esc(p[1]||"—")+'</div>'; }).join("");
+  $("detailSummary").textContent = r.summaryText || "（サマリーなし）";
+  $("detailPhotos").innerHTML = (r.photos||[]).map(function(p){
+    return '<a href="'+esc(p.url)+'" target="_blank" rel="noopener" style="background-image:url('+esc(p.url)+')" title="'+esc(p.name||"")+'"></a>';
+  }).join("");
+  $("detailBackdrop").classList.add("open");
+}
+$("detailClose").addEventListener("click", function(){ $("detailBackdrop").classList.remove("open"); });
+$("detailBackdrop").addEventListener("click", function(e){ if(e.target===$("detailBackdrop")) $("detailBackdrop").classList.remove("open"); });
+
+/* 起動：このブラウザで既にパスワード確認済みなら自動的に開く */
+(function(){
+  var pass = "";
+  try{ pass = sessionStorage.getItem(SESSION_KEY) || ""; }catch(e){}
+  if(pass) tryOpen(pass); else showGate("");
+})();
+
+})();
+</script>
+</body>
+</html>
