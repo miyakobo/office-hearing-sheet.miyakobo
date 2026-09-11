@@ -20,6 +20,10 @@ var SUBMISSIONS_HEADERS = [
 ];
 var COMPANIES_HEADERS = ["token", "companyName", "issuedAt", "note"];
 
+// 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
+// 「宮工房ヒアリングツール」→「管理者パスワードを設定…」からいつでも変更できます。
+var DEFAULT_ADMIN_PASSWORD = "miyakobo-7k2x9q";
+
 /* ───────────────────────────── 設定 ───────────────────────────── */
 
 function getNotifyEmail_() {
@@ -27,7 +31,7 @@ function getNotifyEmail_() {
   return v || "ishikawa@miyakobo.com";
 }
 function getAdminPassword_() {
-  return PropertiesService.getScriptProperties().getProperty("ADMIN_PASSWORD") || "";
+  return PropertiesService.getScriptProperties().getProperty("ADMIN_PASSWORD") || DEFAULT_ADMIN_PASSWORD;
 }
 
 /* ───────────────────────────── シート ヘルパー ───────────────────────────── */
