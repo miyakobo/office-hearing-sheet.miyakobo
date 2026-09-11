@@ -138,6 +138,7 @@
       <div class="meta" id="detailMeta"></div>
       <div class="summary" id="detailSummary"></div>
       <div class="photos" id="detailPhotos"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px" id="detailDocs"></div>
     </div>
   </div>
 </div>
@@ -265,6 +266,10 @@ function openDetail(r){
   $("detailPhotos").innerHTML = (r.photos||[]).map(function(p){
     return '<a href="'+esc(p.url)+'" target="_blank" rel="noopener" style="background-image:url('+esc(p.url)+')" title="'+esc(p.name||"")+'"></a>';
   }).join("");
+  var docsHtml = (r.docs||[]).map(function(d){
+    return '<a href="'+esc(d.url)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid var(--divider2);border-radius:6px;font-size:12.5px;text-decoration:none;color:var(--ink)">'+esc(d.name||"資料")+'</a>';
+  }).join(" ");
+  $("detailDocs").innerHTML = docsHtml;
   $("detailBackdrop").classList.add("open");
 }
 $("detailClose").addEventListener("click", function(){ $("detailBackdrop").classList.remove("open"); });
