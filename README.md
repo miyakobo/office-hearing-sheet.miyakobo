@@ -48,6 +48,8 @@ admin.html（パスワード保護）── 一覧取得 ──▶ 同じ Apps S
 4. 初回は権限の承認画面が出るので、miyakobo.comのアカウントで承認する（Gmail送信・Drive・スプレッドシートへのアクセス許可）。
 5. 発行された **ウェブアプリのURL**（`https://script.google.com/macros/s/xxxxx/exec`）を控える。
 
+> `gas/appsscript.json` の権限（oauthScopes）を変更した場合は、次回デプロイ時に**もう一度、権限の承認画面が表示されます**。写真・資料をGoogle Driveに保存する機能のため、Driveへのフルアクセス権限（`https://www.googleapis.com/auth/drive`）が必要です。
+
 > コードを更新した場合は「デプロイ」→「デプロイを管理」→ 対象の鉛筆アイコンから「新しいバージョン」を選んで再デプロイしてください（URLは変わりません）。
 
 ### 4. フロントエンドにURLを設定
@@ -61,6 +63,20 @@ admin.html（パスワード保護）── 一覧取得 ──▶ 同じ Apps S
 2. 公開後のURL例: `https://<ユーザー名>.github.io/<リポジトリ名>/index.html`
 
 他の静的ホスティング（Netlify・Vercel・Cloudflare Pagesなど）でも、`index.html` と `admin.html` をそのまま配置すれば動きます。
+
+### 6. 独自ドメインの設定（`raraji827.github.io` を出さないようにする）
+
+このリポジトリには `CNAME` ファイル（中身：`hearing.miyakobo.com`）を用意済みです。実際に使うには、以下をお願いします。
+
+1. `hearing.miyakobo.com` をお使いのドメイン（miyakobo.com）のDNS管理画面（お名前.com、Google Domains等）で設定する：
+   - レコードタイプ：**CNAME**
+   - ホスト名：**hearing**
+   - 値（参照先）：**raraji827.github.io**
+2. GitHubリポジトリの Settings → Pages の「Custom domain」欄に `hearing.miyakobo.com` を入力して保存する。
+3. DNSの反映（数分〜数時間）を待ってから、同じ画面で「Enforce HTTPS」にチェックを入れる。
+4. 反映後は `https://hearing.miyakobo.com/index.html`（管理者用は `/admin.html`）でアクセスできるようになる。
+
+サブドメイン名を変えたい場合は、リポジトリ直下の `CNAME` ファイルの中身を書き換えてから、上記の手順をやり直してください。
 
 ## 企業ごとの専用リンクの発行
 

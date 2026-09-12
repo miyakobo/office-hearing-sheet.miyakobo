@@ -710,10 +710,20 @@ function onChange(e){
       if(!el.checked && j!==-1) l2.splice(j,1);
       state.checks[cg] = l2;
     }
+    // 机サイズ：「特になし」と W/D の指定は相互排他
+    if((cg==="deskW"||cg==="deskD") && el.checked){
+      state.checks.deskNone = [];
+    }
+    if(cg==="deskNone" && (state.checks.deskNone||[]).length){
+      state.radio.deskW = ""; state.radio.deskD = "";
+      state.text.deskWOther = ""; state.text.deskDOther = "";
+    }
     save(); render(); return;
   }
   if(el.hasAttribute("data-key")){
-    state.text[el.getAttribute("data-key")] = el.value;
+    var dk = el.getAttribute("data-key");
+    state.text[dk] = el.value;
+    if((dk==="deskWOther"||dk==="deskDOther") && el.value){ state.checks.deskNone = []; }
     save();
     $("drawerText").value = buildSummary();
     var st = $("summaryText"); if(st) st.value = buildSummary();
