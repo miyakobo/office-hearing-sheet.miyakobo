@@ -73,12 +73,7 @@
                   border:1px solid var(--line);border-radius:var(--radius)}
   .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 18px;margin-bottom:20px;font-size:13.5px}
   .meta div span{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
-  .photos{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-  .photos a{display:block;width:92px;height:92px;background-size:cover;background-position:center;
-            border:1px solid var(--line2);border-radius:var(--radius);filter:grayscale(1)}
-  .docs a{display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--line2);
-          border-radius:999px;font-size:12.5px;text-decoration:none;color:var(--ink)}
-  .docs a:hover{border-color:var(--ink)}
+  .note{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.7}
   .status{font-size:13px;color:var(--muted);margin:16px 0}
 
   @media (max-width:720px){ .wrap{padding:24px 16px 48px} }
@@ -137,8 +132,7 @@
     <div class="body">
       <div class="meta" id="detailMeta"></div>
       <div class="summary" id="detailSummary"></div>
-      <div class="photos" id="detailPhotos"></div>
-      <div class="docs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px" id="detailDocs"></div>
+      <div id="detailPhotos"></div>
     </div>
   </div>
 </div>
@@ -264,12 +258,9 @@ function openDetail(r){
     ["入居希望", r.moveDate], ["予算", r.budget]
   ].map(function(p){ return '<div><span>'+esc(p[0])+'</span>'+esc(p[1]||"—")+'</div>'; }).join("");
   $("detailSummary").textContent = r.summaryText || "（サマリーなし）";
-  $("detailPhotos").innerHTML = (r.photos||[]).map(function(p){
-    return '<a href="'+esc(p.url)+'" target="_blank" rel="noopener" style="background-image:url('+esc(p.url)+')" title="'+esc(p.name||"")+'"></a>';
-  }).join("");
-  $("detailDocs").innerHTML = (r.docs||[]).map(function(d){
-    return '<a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+esc(d.name||"資料")+'</a>';
-  }).join("");
+  var attachNote = [r.photos, r.docs].filter(Boolean).join("、");
+  $("detailPhotos").innerHTML = attachNote
+    ? '<div class="note">添付ファイル（メールに添付済み）：'+esc(attachNote)+'</div>' : "";
   $("detailBackdrop").classList.add("open");
 }
 $("detailClose").addEventListener("click", function(){ $("detailBackdrop").classList.remove("open"); });

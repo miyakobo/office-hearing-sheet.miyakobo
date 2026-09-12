@@ -16,7 +16,6 @@
 
 var SUBMISSIONS_SHEET = "Submissions";
 var COMPANIES_SHEET = "Companies";
-var DRIVE_FOLDER_NAME = "宮工房ヒアリング添付";
 
 // 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し
 // 先頭3列（送信日時・送信元区分・リンクトークン）は固定表示され、誰からの回答かひと目でわかるようにしている。
@@ -52,8 +51,8 @@ var SUBMISSIONS_FIELDS = [
   { key: "drawings", header: "図面データの有無" },
   { key: "notes", header: "面談メモ・特記事項" },
   { key: "testFitDate", header: "テストフィット希望日" },
-  { key: "photosJson", header: "添付写真（リンク・内部用）" },
-  { key: "docsJson", header: "添付資料（リンク・内部用）" },
+  { key: "photos", header: "添付写真（ファイル名）" },
+  { key: "docs", header: "添付資料（ファイル名）" },
   { key: "summaryText", header: "要件サマリー（全文）" },
   { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）" },
   { key: "id", header: "ID（内部用）" }
@@ -127,19 +126,6 @@ function getOrCreateSubmissionsSheet_() {
   return sheet;
 }
 
-function getOrCreateDriveFolder_() {
-  // "drive.file" スコープ（このスクリプトが作成したファイルのみアクセス可）で完結させるため、
-  // Drive全体を検索する getFoldersByName() は使わず、作成したフォルダのIDを保存して使い回す。
-  var props = PropertiesService.getScriptProperties();
-  var id = props.getProperty("DRIVE_FOLDER_ID");
-  if (id) {
-    try { return DriveApp.getFolderById(id); } catch (err) { /* フォルダが見つからなければ作り直す */ }
-  }
-  var folder = DriveApp.createFolder(DRIVE_FOLDER_NAME);
-  props.setProperty("DRIVE_FOLDER_ID", folder.getId());
-  return folder;
-}
-
 /* ───────────────────────────── サマリー用の小さな整形ヘルパー ───────────────────────────── */
 
 function withQty_(name, cap, capUnit, count, countUnit) {
@@ -187,22 +173,21 @@ function computeAreas_(checks, rooms, text) {
 
 /* ───────────────────────────── doPost: 回答の受信 ───────────────────────────── */
 
-function saveAttachments_(files, folder) {
-  var refs = [], blobs = [];
+function buildAttachments_(files) {
+  // Driveには保存せず、メールへの添付だけを行う（Driveの権限が一切不要になる、最もシンプルな構成）。
+  var names = [], blobs = [];
   (files || []).forEach(function (p) {
     if (!p || !p.content) return;
     try {
       var bytes = Utilities.base64Decode(p.content);
       var blob = Utilities.newBlob(bytes, p.mimeType || "application/octet-stream", p.filename || "file");
       blobs.push(blob);
-      var file = folder.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      refs.push({ url: file.getUrl(), name: p.filename || file.getName() });
+      names.push(p.filename || "file");
     } catch (err) {
       // 1件失敗しても他の処理は続行する
     }
   });
-  return { refs: refs, blobs: blobs };
+  return { names: names, blobs: blobs };
 }
 
 function doPost(e) {
@@ -220,9 +205,8 @@ function doPost(e) {
       }
     }
 
-    var folder = getOrCreateDriveFolder_();
-    var photoResult = saveAttachments_(body.photos, folder);
-    var docResult = saveAttachments_(body.docs, folder);
+    var photoResult = buildAttachments_(body.photos);
+    var docResult = buildAttachments_(body.docs);
     var attachments = photoResult.blobs.concat(docResult.blobs);
 
     var id = Utilities.getUuid();
@@ -244,7 +228,7 @@ function doPost(e) {
       priorities: (checks.priorities || []).join("、"), priorityOther: text.priorityOther || "",
       drawings: (checks.drawings || []).join("、"),
       notes: text.notes || "", testFitDate: text.testFitDate || "",
-      photosJson: JSON.stringify(photoResult.refs), docsJson: JSON.stringify(docResult.refs),
+      photos: photoResult.names.join("、"), docs: docResult.names.join("、"),
       summaryText: body.summaryText || "", rawJson: JSON.stringify(body)
     };
 
@@ -292,9 +276,7 @@ function doGet(e) {
       if (!row[0]) continue; // 空行はスキップ
       var obj = {};
       SUBMISSIONS_FIELDS.forEach(function (f, idx) { obj[f.key] = row[idx]; });
-      try { obj.photos = JSON.parse(obj.photosJson || "[]"); } catch (e2) { obj.photos = []; }
-      try { obj.docs = JSON.parse(obj.docsJson || "[]"); } catch (e3) { obj.docs = []; }
-      delete obj.photosJson; delete obj.docsJson; delete obj.rawJson;
+      delete obj.rawJson;
       submissions.push(obj);
     }
     return ContentService.createTextOutput(JSON.stringify({ ok: true, submissions: submissions }))
