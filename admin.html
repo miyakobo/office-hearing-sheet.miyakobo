@@ -116,7 +116,7 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>受信日時</th><th>会社名</th><th>案件名</th><th>ご担当者</th><th>区分</th>
+        <th>受信日時</th><th>会社名</th><th>案件名</th><th>ご担当者</th><th>送信元区分</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -232,12 +232,13 @@ function renderRows(){
   $("rows").innerHTML = rows.map(function(r,i){
     var d = r.timestamp ? new Date(r.timestamp) : null;
     var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
+    var warn = String(r.senderType||"").indexOf("⚠")===0;
     return '<tr data-i="'+i+'" data-id="'+esc(r.id||"")+'">'
       + '<td>'+esc(dstr)+'</td>'
       + '<td>'+esc(r.company||"（未記入）")+'</td>'
       + '<td>'+esc(r.caseName||"")+'</td>'
       + '<td>'+esc(r.contact||"")+'</td>'
-      + '<td>'+(r.token? '<span class="tag">'+esc(r.token)+'</span>' : '<span class="tag">社内</span>')+'</td>'
+      + '<td><span class="tag"'+(warn?' style="border-color:#b3382c;color:#b3382c"':'')+'>'+esc(r.senderType||(r.token?r.token:"社内"))+'</span></td>'
       + '</tr>';
   }).join("");
   $("listStatus").textContent = rows.length + " 件（全 " + allRows.length + " 件中）";
@@ -256,7 +257,7 @@ $("tokenInput").addEventListener("input", renderRows);
 function openDetail(r){
   var d = r.timestamp ? new Date(r.timestamp) : null;
   var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
-  $("detailKicker").textContent = dstr + (r.token ? "　/　リンク: "+r.token : "　/　社内利用");
+  $("detailKicker").textContent = dstr + "　/　" + (r.senderType || (r.token ? "リンク: "+r.token : "社内利用"));
   $("detailTitle").textContent = r.caseName || r.company || "（案件名未記入）";
   $("detailMeta").innerHTML = [
     ["会社名", r.company], ["ご担当者", r.contact], ["所在地", r.address],

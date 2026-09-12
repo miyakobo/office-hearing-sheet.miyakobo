@@ -19,13 +19,14 @@ var COMPANIES_SHEET = "Companies";
 var DRIVE_FOLDER_NAME = "宮工房ヒアリング添付";
 
 // 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し
+// 先頭3列（送信日時・送信元区分・リンクトークン）は固定表示され、誰からの回答かひと目でわかるようにしている。
 var SUBMISSIONS_FIELDS = [
-  { key: "id", header: "ID" },
   { key: "timestamp", header: "送信日時" },
+  { key: "senderType", header: "送信元区分" },
   { key: "token", header: "リンクトークン" },
   { key: "linkCompany", header: "登録会社名（トークン）" },
   { key: "caseName", header: "案件名" },
-  { key: "company", header: "会社名" },
+  { key: "company", header: "会社名（本人記入）" },
   { key: "contact", header: "ご担当者名・役職" },
   { key: "address", header: "現在のオフィス所在地" },
   { key: "moveDate", header: "入居希望日・移転期限" },
@@ -54,8 +55,10 @@ var SUBMISSIONS_FIELDS = [
   { key: "photosJson", header: "添付写真（リンク・内部用）" },
   { key: "docsJson", header: "添付資料（リンク・内部用）" },
   { key: "summaryText", header: "要件サマリー（全文）" },
-  { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）" }
+  { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）" },
+  { key: "id", header: "ID（内部用）" }
 ];
+var SENDER_ID_FROZEN_COLS = 3; // 送信日時・送信元区分・リンクトークン を固定表示
 var COMPANIES_HEADERS = ["トークン", "会社名", "発行日時", "備考"];
 
 // 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
@@ -85,6 +88,29 @@ function getOrCreatePlainSheet_(name, headers) {
   return sheet;
 }
 
+function formatSubmissionsSheet_(sheet, headers) {
+  sheet.setFrozenRows(1);
+  sheet.setFrozenColumns(SENDER_ID_FROZEN_COLS);
+  sheet.setColumnWidths(1, headers.length, 160);
+  sheet.setColumnWidth(headers.length, 420); // 要件サマリー等は広めに
+
+  var headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setFontWeight("bold").setBackground("#e9e9ea");
+
+  var fullRange = sheet.getRange(1, 1, Math.max(sheet.getMaxRows(), 200), headers.length);
+  try { fullRange.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false); } catch (e) {}
+
+  var senderTypeCol = SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("senderType") + 1;
+  if (senderTypeCol > 0) {
+    var rule = SpreadsheetApp.newConditionalFormatRule()
+      .whenTextStartsWith("⚠")
+      .setFontColor("#b3382c").setBold(true)
+      .setRanges([sheet.getRange(2, senderTypeCol, Math.max(sheet.getMaxRows() - 1, 1), 1)])
+      .build();
+    sheet.setConditionalFormatRules([rule]);
+  }
+}
+
 function getOrCreateSubmissionsSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
@@ -92,13 +118,11 @@ function getOrCreateSubmissionsSheet_() {
   if (!sheet) {
     sheet = ss.insertSheet(SUBMISSIONS_SHEET);
     sheet.appendRow(headers);
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidths(1, headers.length, 160);
-    sheet.setColumnWidth(headers.length, 420); // summaryText/RAW JSON等は広めに
+    formatSubmissionsSheet_(sheet, headers);
   } else if (sheet.getLastRow() === 0) {
-    // シートはあるが空（ヘッダー未設定）の場合のみ、日本語見出しを書き込む
+    // シートはあるが空（ヘッダー未設定）の場合のみ、日本語見出し・書式を設定する
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.setFrozenRows(1);
+    formatSubmissionsSheet_(sheet, headers);
   }
   return sheet;
 }
@@ -135,6 +159,11 @@ function computeDeskSize_(checks, radio, text) {
   if (w) parts.push("W" + w);
   if (d) parts.push("D" + d);
   return parts.length ? parts.join(" × ") + "mm" : "";
+}
+function computeSenderType_(token, linkCompany) {
+  if (!token) return "社内";
+  if (linkCompany) return linkCompany;
+  return "⚠未登録トークン：" + token; // 発行し忘れ・URL改ざん等の可能性。Companiesシートを確認してください
 }
 function computeAreas_(checks, rooms, text) {
   var list = checks.areas || [];
@@ -194,6 +223,7 @@ function doPost(e) {
 
     var data = {
       id: id, timestamp: timestamp, token: token, linkCompany: linkCompany,
+      senderType: computeSenderType_(token, linkCompany),
       caseName: text.caseName || "", company: text.company || "", contact: text.contact || "",
       address: text.address || "", moveDate: text.moveDate || "", budget: text.budget || "",
       sizeNote: text.sizeNote || "", projectType: radio.projectType || "",
