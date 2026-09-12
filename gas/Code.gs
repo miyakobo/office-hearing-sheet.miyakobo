@@ -128,9 +128,16 @@ function getOrCreateSubmissionsSheet_() {
 }
 
 function getOrCreateDriveFolder_() {
-  var it = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
-  if (it.hasNext()) return it.next();
-  return DriveApp.createFolder(DRIVE_FOLDER_NAME);
+  // "drive.file" スコープ（このスクリプトが作成したファイルのみアクセス可）で完結させるため、
+  // Drive全体を検索する getFoldersByName() は使わず、作成したフォルダのIDを保存して使い回す。
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty("DRIVE_FOLDER_ID");
+  if (id) {
+    try { return DriveApp.getFolderById(id); } catch (err) { /* フォルダが見つからなければ作り直す */ }
+  }
+  var folder = DriveApp.createFolder(DRIVE_FOLDER_NAME);
+  props.setProperty("DRIVE_FOLDER_ID", folder.getId());
+  return folder;
 }
 
 /* ───────────────────────────── サマリー用の小さな整形ヘルパー ───────────────────────────── */
@@ -158,7 +165,7 @@ function computeDeskSize_(checks, radio, text) {
   var parts = [];
   if (w) parts.push("W" + w);
   if (d) parts.push("D" + d);
-  return parts.length ? parts.join(" × ") + "mm" : "";
+  return parts.length ? parts.join(" × ") + "mm" : "W1200×D600mm（標準サイズで製作）";
 }
 function computeSenderType_(token, linkCompany) {
   if (!token) return "社内";

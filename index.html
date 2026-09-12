@@ -261,10 +261,10 @@ var GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby3A8SC1FOxnVkloGa
 var SECTIONS = [
   { id:"overview", no:"01", en:"PROJECT", title:"プロジェクト概要",
     fields:[
-      {key:"caseName",label:"案件名",wide:true},
-      {key:"company",label:"会社名"},
-      {key:"contact",label:"ご担当者名・役職"},
-      {key:"address",label:"現在のオフィス所在地",wide:true},
+      {key:"caseName",label:"案件名",wide:true,ph:"例：株式会社〇〇　本社移転プロジェクト"},
+      {key:"company",label:"会社名",ph:"例：ミライ商事株式会社"},
+      {key:"contact",label:"ご担当者名・役職",ph:"例：総務部 山田様"},
+      {key:"address",label:"現在のオフィス所在地",wide:true,ph:"例：東京都千代田区〇〇1-2-3"},
       {key:"moveDate",label:"入居希望日・移転期限",ph:"例：2027年4月"},
       {key:"budget",label:"想定予算",ph:"例：5,000万円"},
       {key:"sizeNote",label:"想定面積",ph:"例：800坪"}
@@ -291,7 +291,8 @@ var SECTIONS = [
       {group:"seatType",mode:"multi",label:"座席タイプ（複数選択可）",items:["固定席中心","フリーアドレス","個室中心"]},
       {group:"deskW",mode:"radio",label:"希望の机サイズ　W（mm）",items:["1000","1200","1400"],otherKey:"deskWOther",otherPh:"その他（例：1600）"},
       {group:"deskD",mode:"radio",label:"希望の机サイズ　D（mm）",items:["600","700"],otherKey:"deskDOther",otherPh:"その他（例：800）"},
-      {group:"deskNone",mode:"multi",label:"机サイズの希望",items:["特になし"]}
+      {group:"deskNone",mode:"multi",label:"机サイズの希望",items:["特になし"],
+        note:"※チェックがない場合、W1200×D600の机で製作します"}
     ],
     tail:[{key:"seatTypeOther",label:"その他（自由記述）",wide:true}] },
 
@@ -303,6 +304,9 @@ var SECTIONS = [
       {value:"先進的",caption:"先進的",images:["photos/mood-5.webp","photos/mood-6.webp"]},
       {value:"モノトーン",caption:"モノトーン",images:["photos/mood-7.webp","photos/mood-8.webp"]},
       {value:"モダン",caption:"モダン",images:["photos/mood-9.webp","photos/mood-10.webp"]}],
+    chipGroups:[
+      {group:"imageKeywords",mode:"multi",label:"",items:["特になし"]}
+    ],
     photos:true,
     tail:[{key:"imageOther",label:"その他",wide:true,ph:"上の5つに近いものがなければ、言葉で記入してください"}] },
 
@@ -430,6 +434,7 @@ function buildSummary(){
     if(w) desk.push("W"+w);
     if(dd) desk.push("D"+dd);
     if(desk.length) pl.push("希望の机サイズ（1人分）："+desk.join(" × ")+"mm");
+    else pl.push("希望の机サイズ（1人分）：W1200×D600mm（標準サイズで製作）");
   }
   if(pl.length) blocks.push("■ 人員・座席\n"+pl.join("\n"));
 
@@ -500,7 +505,9 @@ function fieldHtml(f){
 function chipGroupHtml(g){
   var isRadio = g.mode === "radio";
   var otherVal = g.otherKey ? esc(state.text[g.otherKey]==null?"":state.text[g.otherKey]) : "";
-  return '<div class="chipgroup"><div class="grouplabel">'+esc(g.label)+'</div><div class="chips">'
+  return '<div class="chipgroup">'
+    + (g.label ? '<div class="grouplabel">'+esc(g.label)+'</div>' : "")
+    + '<div class="chips">'
     + g.items.map(function(v){
         var on = isRadio ? state.radio[g.group]===v : (state.checks[g.group]||[]).indexOf(v)!==-1;
         return '<label class="chip'+(on?" on":"")+'">'
@@ -508,7 +515,9 @@ function chipGroupHtml(g){
           + g.mode+'" value="'+esc(v)+'"'+(on?" checked":"")+'><span>'+esc(v)+'</span></label>';
       }).join("")
     + (g.otherKey ? '<input class="chip-other" type="text" data-key="'+g.otherKey+'" value="'+otherVal+'" placeholder="'+esc(g.otherPh||"その他")+'">' : "")
-    + '</div></div>';
+    + '</div>'
+    + (g.note ? '<div class="fieldnote" style="margin-top:8px">'+esc(g.note)+'</div>' : "")
+    + '</div>';
 }
 
 function sectionHtml(sec){
