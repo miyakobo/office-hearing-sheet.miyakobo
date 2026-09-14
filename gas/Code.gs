@@ -6,58 +6,76 @@
  * ウェブアプリとしてデプロイして使います。手順は README.md 参照。
  *
  * シート構成（初回実行時に自動作成されます）:
- *   - "Submissions" … 送信された回答の1件1行ログ（設問ごとに列を分けた、日本語見出しの一覧）
+ *   - "Submissions" … 送信された回答の1件1行ログ（01〜08のセクションごとに列をまとめた一覧）
  *   - "Companies"   … 企業別リンクのトークン → 会社名 の対応表（任意・記録用）
  *
  * Submissionsシートの見出しは日本語（人が読むため）だが、admin.html等プログラムからの
  * 読み書きは SUBMISSIONS_FIELDS の内部キー（英語・位置固定）で行うため、見出し文言を
  * 変えても読み取りは壊れない。
+ *
+ * 「担当者」「ステータス」列はフォームからは送られてこない、社内で直接シートに書き込む
+ * 手入力の欄（案件ごとの対応管理用）。
  */
 
 var SUBMISSIONS_SHEET = "Submissions";
 var COMPANIES_SHEET = "Companies";
 
-// 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し
-// 先頭3列（送信日時・送信元区分・リンクトークン）は固定表示され、誰からの回答かひと目でわかるようにしている。
+// 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（01〜08）に属するか。
+// section が同じ列は、シート上で見出し行がまとめて結合表示される。
 var SUBMISSIONS_FIELDS = [
-  { key: "timestamp", header: "送信日時" },
-  { key: "senderType", header: "送信元区分" },
-  { key: "token", header: "リンクトークン" },
-  { key: "linkCompany", header: "登録会社名（トークン）" },
-  { key: "caseName", header: "案件名" },
-  { key: "company", header: "会社名（本人記入）" },
-  { key: "contact", header: "ご担当者名・役職" },
-  { key: "address", header: "現在のオフィス所在地" },
-  { key: "moveDate", header: "入居希望日・移転期限" },
-  { key: "budget", header: "想定予算" },
-  { key: "sizeNote", header: "想定面積" },
-  { key: "projectType", header: "プロジェクト種別" },
-  { key: "background", header: "検討の背景" },
-  { key: "backgroundOther", header: "検討の背景（その他）" },
-  { key: "headNow", header: "現在の人数" },
-  { key: "headMove", header: "入居時の想定人数" },
-  { key: "headFuture", header: "将来の想定人数（3年後目安）" },
-  { key: "seatType", header: "座席タイプ" },
-  { key: "seatTypeOther", header: "座席タイプ（その他）" },
-  { key: "deskSize", header: "希望の机サイズ" },
-  { key: "imageKeywords", header: "求める空間イメージ" },
-  { key: "imageOther", header: "空間イメージ（その他）" },
-  { key: "areas", header: "必要な機能・エリア" },
-  { key: "areaOther", header: "その他のエリア" },
-  { key: "equipment", header: "設備・技術要件" },
-  { key: "equipmentOther", header: "設備・技術要件（その他）" },
-  { key: "priorities", header: "優先要件" },
-  { key: "priorityOther", header: "優先要件（その他）" },
-  { key: "drawings", header: "図面データの有無" },
-  { key: "notes", header: "面談メモ・特記事項" },
-  { key: "testFitDate", header: "テストフィット希望日" },
-  { key: "photos", header: "添付写真（ファイル名）" },
-  { key: "docs", header: "添付資料（ファイル名）" },
-  { key: "summaryText", header: "要件サマリー（全文）" },
-  { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）" },
-  { key: "id", header: "ID（内部用）" }
+  { key: "timestamp", header: "送信日時", section: "" },
+  { key: "senderType", header: "送信元区分", section: "" },
+  { key: "assignee", header: "社内担当者", section: "" },
+  { key: "status", header: "対応状況", section: "" },
+  { key: "oneLineSummary", header: "ひとことまとめ", section: "" },
+  { key: "token", header: "リンクトークン", section: "" },
+  { key: "linkCompany", header: "登録会社名（トークン）", section: "" },
+
+  { key: "caseName", header: "案件名", section: "01 プロジェクト概要" },
+  { key: "company", header: "会社名（本人記入）", section: "01 プロジェクト概要" },
+  { key: "contact", header: "ご担当者名・役職", section: "01 プロジェクト概要" },
+  { key: "contactEmail", header: "ご担当者メールアドレス", section: "01 プロジェクト概要" },
+  { key: "contactPhone", header: "ご担当者電話番号", section: "01 プロジェクト概要" },
+  { key: "address", header: "現在のオフィス所在地", section: "01 プロジェクト概要" },
+  { key: "moveDate", header: "入居希望日・移転期限", section: "01 プロジェクト概要" },
+  { key: "budget", header: "想定予算", section: "01 プロジェクト概要" },
+  { key: "sizeNote", header: "想定面積", section: "01 プロジェクト概要" },
+  { key: "projectType", header: "プロジェクト種別", section: "01 プロジェクト概要" },
+
+  { key: "background", header: "検討の背景", section: "02 検討の背景" },
+  { key: "backgroundOther", header: "検討の背景（その他）", section: "02 検討の背景" },
+
+  { key: "headNow", header: "現在の人数", section: "03 人員・座席" },
+  { key: "headMove", header: "入居時の想定人数", section: "03 人員・座席" },
+  { key: "headFuture", header: "将来の想定人数（3年後目安）", section: "03 人員・座席" },
+  { key: "seatType", header: "座席タイプ", section: "03 人員・座席" },
+  { key: "seatTypeOther", header: "座席タイプ（その他）", section: "03 人員・座席" },
+  { key: "deskSize", header: "希望の机サイズ", section: "03 人員・座席" },
+
+  { key: "imageKeywords", header: "求める空間イメージ", section: "04 求める空間イメージ" },
+  { key: "imageOther", header: "空間イメージ（その他）", section: "04 求める空間イメージ" },
+
+  { key: "areas", header: "必要な機能・エリア", section: "05 必要な機能・エリア" },
+  { key: "areaOther", header: "その他のエリア", section: "05 必要な機能・エリア" },
+
+  { key: "equipment", header: "設備・技術要件", section: "06 設備・技術要件" },
+  { key: "equipmentOther", header: "設備・技術要件（その他）", section: "06 設備・技術要件" },
+
+  { key: "priorities", header: "優先要件", section: "07 優先要件" },
+  { key: "priorityOther", header: "優先要件（その他）", section: "07 優先要件" },
+
+  { key: "drawings", header: "図面データの有無", section: "08 特記事項・物件資料" },
+  { key: "notes", header: "面談メモ・特記事項", section: "08 特記事項・物件資料" },
+  { key: "testFitDate", header: "テストフィット希望日", section: "08 特記事項・物件資料" },
+  { key: "photos", header: "添付写真（ファイル名）", section: "08 特記事項・物件資料" },
+  { key: "docs", header: "添付資料（ファイル名）", section: "08 特記事項・物件資料" },
+
+  { key: "summaryText", header: "要件サマリー（全文）", section: "" },
+  { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）", section: "" },
+  { key: "id", header: "ID（内部用）", section: "" }
 ];
-var SENDER_ID_FROZEN_COLS = 3; // 送信日時・送信元区分・リンクトークン を固定表示
+var FROZEN_COLS = 5; // 送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
+var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
 var COMPANIES_HEADERS = ["トークン", "会社名", "発行日時", "備考"];
 
 // 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
@@ -87,41 +105,66 @@ function getOrCreatePlainSheet_(name, headers) {
   return sheet;
 }
 
-function formatSubmissionsSheet_(sheet, headers) {
-  sheet.setFrozenRows(1);
-  sheet.setFrozenColumns(SENDER_ID_FROZEN_COLS);
-  sheet.setColumnWidths(1, headers.length, 160);
-  sheet.setColumnWidth(headers.length, 420); // 要件サマリー等は広めに
+function formatSubmissionsSheet_(sheet) {
+  var n = SUBMISSIONS_FIELDS.length;
+  var groupRow = [], labelRow = [];
+  SUBMISSIONS_FIELDS.forEach(function (f) { groupRow.push(f.section || ""); labelRow.push(f.header); });
 
-  var headerRange = sheet.getRange(1, 1, 1, headers.length);
-  headerRange.setFontWeight("bold").setBackground("#e9e9ea");
+  sheet.getRange(1, 1, 1, n).setValues([groupRow]);
+  sheet.getRange(2, 1, 1, n).setValues([labelRow]);
 
-  var fullRange = sheet.getRange(1, 1, Math.max(sheet.getMaxRows(), 200), headers.length);
+  // 同じセクション名が連続する範囲を結合して、01〜08ごとの見出しにする
+  var col = 1;
+  while (col <= n) {
+    var section = SUBMISSIONS_FIELDS[col - 1].section;
+    var start = col;
+    while (col <= n && SUBMISSIONS_FIELDS[col - 1].section === section) col++;
+    if (section && col - start > 1) {
+      sheet.getRange(1, start, 1, col - start).merge();
+    }
+  }
+
+  sheet.setFrozenRows(2);
+  sheet.setFrozenColumns(FROZEN_COLS);
+  sheet.setColumnWidths(1, n, 160);
+  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("oneLineSummary") + 1, 320);
+  sheet.setColumnWidth(n, 420); // 最後列（RAW JSON）は広め
+
+  var groupRange = sheet.getRange(1, 1, 1, n);
+  groupRange.setFontWeight("bold").setBackground("#dcdcdc").setHorizontalAlignment("center");
+  var labelRange = sheet.getRange(2, 1, 1, n);
+  labelRange.setFontWeight("bold").setBackground("#e9e9ea");
+
+  var fullRange = sheet.getRange(1, 1, Math.max(sheet.getMaxRows(), 200), n);
   try { fullRange.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false); } catch (e) {}
 
-  var senderTypeCol = SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("senderType") + 1;
+  var keys = SUBMISSIONS_FIELDS.map(function (f) { return f.key; });
+  var senderTypeCol = keys.indexOf("senderType") + 1;
   if (senderTypeCol > 0) {
     var rule = SpreadsheetApp.newConditionalFormatRule()
       .whenTextStartsWith("⚠")
       .setFontColor("#b3382c").setBold(true)
-      .setRanges([sheet.getRange(2, senderTypeCol, Math.max(sheet.getMaxRows() - 1, 1), 1)])
+      .setRanges([sheet.getRange(3, senderTypeCol, Math.max(sheet.getMaxRows() - 2, 1), 1)])
       .build();
     sheet.setConditionalFormatRules([rule]);
+  }
+
+  var statusCol = keys.indexOf("status") + 1;
+  if (statusCol > 0) {
+    var validation = SpreadsheetApp.newDataValidation().requireValueInList(STATUS_OPTIONS, true).setAllowInvalid(true).build();
+    sheet.getRange(3, statusCol, Math.max(sheet.getMaxRows() - 2, 1), 1).setDataValidation(validation);
   }
 }
 
 function getOrCreateSubmissionsSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
-  var headers = SUBMISSIONS_FIELDS.map(function (f) { return f.header; });
   if (!sheet) {
     sheet = ss.insertSheet(SUBMISSIONS_SHEET);
-    sheet.appendRow(headers);
-    formatSubmissionsSheet_(sheet, headers);
-  } else if (sheet.getLastRow() === 0) {
-    // シートはあるが空（ヘッダー未設定）の場合のみ、日本語見出し・書式を設定する
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    formatSubmissionsSheet_(sheet, headers);
+    formatSubmissionsSheet_(sheet);
+  } else if (sheet.getLastRow() < 2) {
+    // シートはあるが見出し未設定（新規、または旧バージョンの1行見出し）の場合のみ書式を作り直す
+    formatSubmissionsSheet_(sheet);
   }
   return sheet;
 }
@@ -171,6 +214,32 @@ function computeAreas_(checks, rooms, text) {
   }).join("、");
 }
 
+// 中学生が読んでも内容がわかるような、平易な一言サマリーを作る（管理者一覧でひと目で状況を把握するため）
+function buildPlainSummary_(text, radio, checks) {
+  var who = text.company || text.caseName || "（会社名未記入）";
+  var name = text.contact ? "（" + text.contact + "様）" : "";
+  var parts = [];
+  parts.push(who + name + "からの回答です。");
+
+  var kind = radio.projectType || "オフィスの見直し";
+  parts.push("内容は「" + kind + "」の検討。");
+
+  var meta = [];
+  if (text.moveDate) meta.push("希望時期は" + text.moveDate);
+  if (text.budget) meta.push("予算は" + text.budget);
+  if (text.sizeNote) meta.push("広さは" + text.sizeNote + "くらい");
+  if (meta.length) parts.push(meta.join("、") + "。");
+
+  if (text.headNow || text.headMove) {
+    parts.push("人数は現在" + (text.headNow || "？") + "名くらいで、入居時は" + (text.headMove || "？") + "名くらいを想定。");
+  }
+
+  var pr = (checks.priorities || []).slice(0, 2);
+  if (pr.length) parts.push("特に大事にしたいのは「" + pr.join("」「") + "」とのこと。");
+
+  return parts.join("");
+}
+
 /* ───────────────────────────── doPost: 回答の受信 ───────────────────────────── */
 
 function buildAttachments_(files) {
@@ -188,6 +257,28 @@ function buildAttachments_(files) {
     }
   });
   return { names: names, blobs: blobs };
+}
+
+function isValidEmail_(s) {
+  return !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
+}
+
+function sendConfirmationToSubmitter_(email, contact, summaryText) {
+  if (!isValidEmail_(email)) return;
+  try {
+    var subject = "【宮工房】オフィス要件ヒアリングを受け付けました";
+    var body = (contact ? contact + "様\n\n" : "")
+      + "このたびはオフィス要件ヒアリングにご回答いただき、誠にありがとうございます。\n"
+      + "担当者に内容が届きました。確認のうえ、担当より折り返しご連絡いたしますので、今しばらくお待ちください。\n\n"
+      + "――――――――――――――――\n"
+      + "ご回答内容の控え\n"
+      + "――――――――――――――――\n"
+      + (summaryText || "（内容なし）") + "\n\n"
+      + "※本メールは送信専用です。ご不明な点がございましたら、宮工房までお問い合わせください。";
+    GmailApp.sendEmail(email, subject, body);
+  } catch (err) {
+    // 確認メールが送れなくても、本体の送信処理自体は失敗させない
+  }
 }
 
 function doPost(e) {
@@ -215,7 +306,9 @@ function doPost(e) {
     var data = {
       id: id, timestamp: timestamp, token: token, linkCompany: linkCompany,
       senderType: computeSenderType_(token, linkCompany),
+      oneLineSummary: buildPlainSummary_(text, radio, checks),
       caseName: text.caseName || "", company: text.company || "", contact: text.contact || "",
+      contactEmail: text.contactEmail || "", contactPhone: text.contactPhone || "",
       address: text.address || "", moveDate: text.moveDate || "", budget: text.budget || "",
       sizeNote: text.sizeNote || "", projectType: radio.projectType || "",
       background: (checks.background || []).join("、"), backgroundOther: text.backgroundOther || "",
@@ -242,10 +335,15 @@ function doPost(e) {
     var bodyText = (body.summaryText || "（内容なし）")
       + "\n\n─────────────\n"
       + "リンクトークン: " + (token || "（社内利用・トークンなし）")
-      + (linkCompany ? "\n登録会社名: " + linkCompany : "");
+      + (linkCompany ? "\n登録会社名: " + linkCompany : "")
+      + (text.contactEmail ? "\nご担当者メール: " + text.contactEmail : "")
+      + (text.contactPhone ? "\nご担当者電話: " + text.contactPhone : "");
     var mailOptions = {};
     if (attachments.length) mailOptions.attachments = attachments;
     GmailApp.sendEmail(getNotifyEmail_(), subject, bodyText, mailOptions);
+
+    // 記入者本人への受付確認メール（メールアドレスの記入があった場合のみ）
+    sendConfirmationToSubmitter_(text.contactEmail, text.contact, body.summaryText);
 
     return ContentService.createTextOutput(JSON.stringify({ ok: true, id: id }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -271,7 +369,7 @@ function doGet(e) {
     var sheet = getOrCreateSubmissionsSheet_();
     var values = sheet.getDataRange().getValues();
     var submissions = [];
-    for (var i = 1; i < values.length; i++) {
+    for (var i = 2; i < values.length; i++) { // 0,1行目は見出し（セクション行・項目行）
       var row = values[i];
       if (!row[0]) continue; // 空行はスキップ
       var obj = {};
