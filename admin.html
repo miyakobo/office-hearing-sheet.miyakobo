@@ -112,7 +112,7 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>受信日時</th><th>送信元区分</th><th>対応状況</th><th>社内担当者</th><th>ひとことまとめ</th><th>会社名</th><th>案件名</th><th>ご担当者</th>
+        <th>案件名</th><th>受信日時</th><th>送信元区分</th><th>対応状況</th><th>社内担当者</th><th>ひとことまとめ</th><th>会社名</th><th>ご担当者</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -229,13 +229,13 @@ function renderRows(){
     var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
     var warn = String(r.senderType||"").indexOf("⚠")===0;
     return '<tr data-i="'+i+'" data-id="'+esc(r.id||"")+'">'
+      + '<td><b>'+esc(r.caseName||"（案件名未記入）")+'</b></td>'
       + '<td>'+esc(dstr)+'</td>'
       + '<td><span class="tag'+(warn?' warn':'')+'">'+esc(r.senderType||(r.token?r.token:"社内"))+'</span></td>'
       + '<td>'+esc(r.status||"未対応")+'</td>'
       + '<td>'+esc(r.assignee||"—")+'</td>'
       + '<td>'+esc(r.oneLineSummary||"")+'</td>'
       + '<td>'+esc(r.company||"（未記入）")+'</td>'
-      + '<td>'+esc(r.caseName||"")+'</td>'
       + '<td>'+esc(r.contact||"")+'</td>'
       + '</tr>';
   }).join("");

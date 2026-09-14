@@ -23,6 +23,7 @@ var COMPANIES_SHEET = "Companies";
 // 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（01〜08）に属するか。
 // section が同じ列は、シート上で見出し行がまとめて結合表示される。
 var SUBMISSIONS_FIELDS = [
+  { key: "caseName", header: "案件名", section: "" },
   { key: "timestamp", header: "送信日時", section: "" },
   { key: "senderType", header: "送信元区分", section: "" },
   { key: "assignee", header: "社内担当者", section: "" },
@@ -31,7 +32,6 @@ var SUBMISSIONS_FIELDS = [
   { key: "token", header: "リンクトークン", section: "" },
   { key: "linkCompany", header: "登録会社名（トークン）", section: "" },
 
-  { key: "caseName", header: "案件名", section: "01 プロジェクト概要" },
   { key: "company", header: "会社名（本人記入）", section: "01 プロジェクト概要" },
   { key: "contact", header: "ご担当者名・役職", section: "01 プロジェクト概要" },
   { key: "contactEmail", header: "ご担当者メールアドレス", section: "01 プロジェクト概要" },
@@ -74,7 +74,7 @@ var SUBMISSIONS_FIELDS = [
   { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）", section: "" },
   { key: "id", header: "ID（内部用）", section: "" }
 ];
-var FROZEN_COLS = 5; // 送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
+var FROZEN_COLS = 6; // 案件名・送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
 var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
 var COMPANIES_HEADERS = ["トークン", "会社名", "発行日時", "備考"];
 
@@ -113,30 +113,46 @@ function formatSubmissionsSheet_(sheet) {
   sheet.getRange(1, 1, 1, n).setValues([groupRow]);
   sheet.getRange(2, 1, 1, n).setValues([labelRow]);
 
-  // 同じセクション名が連続する範囲を結合して、01〜08ごとの見出しにする
-  var col = 1;
+  // セクション（01〜08、および案件名などの識別列）ごとに背景色を交互に変え、
+  // 境目に太めの縦線を入れて「どこからどこまでが同じ設問グループか」を一目でわかるようにする
+  var SECTION_COLORS = ["#e4e4e7", "#ececee"]; // 01/03/05/07 と 02/04/06/08 で交互
+  var IDENT_COLOR = "#d3d3d6"; // 案件名など、セクションを持たない識別列
+  var maxRows = Math.max(sheet.getMaxRows(), 200);
+  var col = 1, sectionIndex = -1;
   while (col <= n) {
     var section = SUBMISSIONS_FIELDS[col - 1].section;
     var start = col;
     while (col <= n && SUBMISSIONS_FIELDS[col - 1].section === section) col++;
-    if (section && col - start > 1) {
-      sheet.getRange(1, start, 1, col - start).merge();
+    var width = col - start;
+    var color;
+    if (section) {
+      sectionIndex++;
+      if (width > 1) sheet.getRange(1, start, 1, width).merge();
+      color = SECTION_COLORS[sectionIndex % SECTION_COLORS.length];
+    } else {
+      color = IDENT_COLOR;
+    }
+    sheet.getRange(1, start, 1, width).setBackground(color);
+    sheet.getRange(2, start, 1, width).setBackground(color);
+    if (start > 1) {
+      sheet.getRange(1, start, maxRows, 1)
+        .setBorder(null, true, null, null, null, null, "#8a8a8a", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
     }
   }
 
   sheet.setFrozenRows(2);
   sheet.setFrozenColumns(FROZEN_COLS);
   sheet.setColumnWidths(1, n, 160);
+  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("caseName") + 1, 220);
   sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("oneLineSummary") + 1, 320);
   sheet.setColumnWidth(n, 420); // 最後列（RAW JSON）は広め
 
-  var groupRange = sheet.getRange(1, 1, 1, n);
-  groupRange.setFontWeight("bold").setBackground("#dcdcdc").setHorizontalAlignment("center");
-  var labelRange = sheet.getRange(2, 1, 1, n);
-  labelRange.setFontWeight("bold").setBackground("#e9e9ea");
+  sheet.getRange(1, 1, 1, n).setFontWeight("bold").setHorizontalAlignment("center");
+  sheet.getRange(2, 1, 1, n).setFontWeight("bold");
 
-  var fullRange = sheet.getRange(1, 1, Math.max(sheet.getMaxRows(), 200), n);
-  try { fullRange.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false); } catch (e) {}
+  // 縞模様（1行おきの色分け）はデータ行だけに適用し、見出し2行の色分けは崩さない
+  var dataRange = sheet.getRange(3, 1, Math.max(maxRows - 2, 1), n);
+  try { dataRange.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, false, false); } catch (e) {}
 
   var keys = SUBMISSIONS_FIELDS.map(function (f) { return f.key; });
   var senderTypeCol = keys.indexOf("senderType") + 1;
