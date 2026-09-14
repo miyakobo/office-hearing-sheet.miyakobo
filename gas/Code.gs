@@ -31,7 +31,6 @@ var SUBMISSIONS_FIELDS = [
   { key: "token", header: "リンクトークン", section: "" },
   { key: "linkCompany", header: "登録会社名（トークン）", section: "" },
 
-  { key: "requesterType", header: "ご依頼主区分", section: "01 プロジェクト概要" },
   { key: "caseName", header: "案件名", section: "01 プロジェクト概要" },
   { key: "company", header: "会社名（本人記入）", section: "01 プロジェクト概要" },
   { key: "contact", header: "ご担当者名・役職", section: "01 プロジェクト概要" },
@@ -219,9 +218,8 @@ function computeAreas_(checks, rooms, text) {
 function buildPlainSummary_(text, radio, checks) {
   var who = text.company || text.caseName || "（会社名未記入）";
   var name = text.contact ? "（" + text.contact + "様）" : "";
-  var kindOfPerson = radio.requesterType ? "【" + radio.requesterType + "】" : "";
   var parts = [];
-  parts.push(kindOfPerson + who + name + "からの回答です。");
+  parts.push(who + name + "からの回答です。");
 
   var kind = radio.projectType || "オフィスの見直し";
   parts.push("内容は「" + kind + "」の検討。");
@@ -290,7 +288,6 @@ function doPost(e) {
     var token = String(body.token || "").trim();
 
     var missing = [];
-    if (!radio.requesterType) missing.push("ご依頼主区分");
     if (!String(text.company || "").trim()) missing.push("会社名");
     if (!isValidEmail_(text.contactEmail)) missing.push("メールアドレス");
     if (!String(text.contactPhone || "").trim()) missing.push("お電話番号");
@@ -320,7 +317,6 @@ function doPost(e) {
       id: id, timestamp: timestamp, token: token, linkCompany: linkCompany,
       senderType: computeSenderType_(token, linkCompany),
       oneLineSummary: buildPlainSummary_(text, radio, checks),
-      requesterType: radio.requesterType || "",
       caseName: text.caseName || "", company: text.company || "", contact: text.contact || "",
       contactEmail: text.contactEmail || "", contactPhone: text.contactPhone || "",
       address: text.address || "", moveDate: text.moveDate || "", budget: text.budget || "",
@@ -348,8 +344,7 @@ function doPost(e) {
       + "（" + Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm") + "）";
     var bodyText = (body.summaryText || "（内容なし）")
       + "\n\n─────────────\n"
-      + "ご依頼主区分: " + (radio.requesterType || "（未選択）")
-      + "\nリンクトークン: " + (token || "（社内利用・トークンなし）")
+      + "リンクトークン: " + (token || "（社内利用・トークンなし）")
       + (linkCompany ? "\n登録会社名: " + linkCompany : "")
       + (text.contactEmail ? "\nご担当者メール: " + text.contactEmail : "")
       + (text.contactPhone ? "\nご担当者電話: " + text.contactPhone : "");

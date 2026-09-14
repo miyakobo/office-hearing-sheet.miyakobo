@@ -264,8 +264,6 @@ var GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby3A8SC1FOxnVkloGa
    ───────────────────────────────────────────── */
 var SECTIONS = [
   { id:"overview", no:"01", en:"PROJECT", title:"プロジェクト概要",
-    lead:{group:"requesterType",mode:"radio",label:"ご依頼主区分",req:true,
-      items:["お客様","協力業者様","社内"]},
     fields:[
       {key:"company",label:"会社名",ph:"例：ミライ商事株式会社",req:true},
       {key:"contactEmail",label:"メールアドレス",type:"email",ph:"例：yamada@example.com",req:true,
@@ -389,7 +387,6 @@ function allChipGroups(sec){ return sec.chipGroups || []; }
 
 function getRequiredIssues(){
   var issues = [];
-  if(!state.radio.requesterType) issues.push("requesterType");
   if(!(state.text.company||"").trim()) issues.push("company");
   var email = (state.text.contactEmail||"").trim();
   if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) issues.push("contactEmail");
@@ -402,9 +399,7 @@ function filledSection(sec){
   var has = function(k){ return !!(t[k] && String(t[k]).trim()); };
   var any = function(arr){ return (arr||[]).some(function(f){ return has(f.key); }); };
   if(any(sec.fields) || any(sec.tail)) return true;
-  var groups = allChipGroups(sec).slice();
-  if(sec.lead) groups.push(sec.lead);
-  var chipsFilled = groups.some(function(g){
+  var chipsFilled = allChipGroups(sec).some(function(g){
     if(g.otherKey && has(g.otherKey)) return true;
     return g.mode === "radio" ? !!state.radio[g.group] : (state.checks[g.group]||[]).length>0;
   });
@@ -426,9 +421,8 @@ function buildSummary(){
 
   var ov = [], head = [t.caseName,t.company].filter(Boolean).join("　");
   if(head) ov.push(head);
-  var who = [state.radio.requesterType?"区分："+state.radio.requesterType:"", t.contact?"ご担当："+t.contact:"",
-    t.contactEmail?"メール："+t.contactEmail:"", t.contactPhone?"電話："+t.contactPhone:"",
-    t.address?"所在地："+t.address:""].filter(Boolean).join("　");
+  var who = [t.contact?"ご担当："+t.contact:"", t.contactEmail?"メール："+t.contactEmail:"",
+    t.contactPhone?"電話："+t.contactPhone:"", t.address?"所在地："+t.address:""].filter(Boolean).join("　");
   if(who) ov.push(who);
   var meta = [];
   if(state.radio.projectType) meta.push("種別："+state.radio.projectType);
@@ -552,10 +546,9 @@ function sectionHtml(sec){
   if(sec.hint) h += '<div class="hint">'+esc(sec.hint)+'</div>';
   if(sec.id==="overview" && invalidKeys.length){
     h += '<div class="hint" style="color:var(--danger);font-weight:700">'
-      + '※ ご依頼主区分・会社名・メールアドレス・お電話番号は必須項目です。ご入力のうえお進みください。</div>';
+      + '※ 会社名・メールアドレス・お電話番号は必須項目です。ご入力のうえお進みください。</div>';
   }
 
-  if(sec.lead) h += chipGroupHtml(sec.lead);
   if(sec.fields) h += '<div class="grid">'+sec.fields.map(fieldHtml).join("")+'</div>';
 
   allChipGroups(sec).forEach(function(g){ h += chipGroupHtml(g); });
