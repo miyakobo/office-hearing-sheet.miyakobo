@@ -73,7 +73,7 @@ var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
 
 // 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
 // 「宮工房ヒアリングツール」→「管理者パスワードを設定…」からいつでも変更できます。
-var DEFAULT_ADMIN_PASSWORD = "miyakobo-7k2x9q";
+var DEFAULT_ADMIN_PASSWORD = "miya1080";
 
 /* ───────────────────────────── 設定 ───────────────────────────── */
 

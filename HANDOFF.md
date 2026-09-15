@@ -32,7 +32,7 @@
   - 管理画面: `https://miyakobo.github.io/office-hearing-sheet.miyakobo/admin.html`
 - バックエンド（Google Apps Script Web App URL、`index.html`/`admin.html`双方にハードコード済み）:
   `https://script.google.com/macros/s/AKfycby3A8SC1FOxnVkloGa3YPX9U0LDtwEQCVEtyVxhBFzR9V9DqXTPLNncykenxI2HTmrZvw/exec`
-- 管理画面パスワード: デフォルト `miyakobo-7k2x9q`（スプレッドシートのメニュー「宮工房ヒアリングツール」→
+- 管理画面パスワード: `miya1080`（スプレッドシートのメニュー「宮工房ヒアリングツール」→
   「管理者パスワードを設定…」でいつでも変更可能。Script Property `ADMIN_PASSWORD` に保存される）
 - 通知先メールアドレス: デフォルト `ishikawa@miyakobo.com`（Script Property `NOTIFY_EMAIL` で上書き可能）
 
