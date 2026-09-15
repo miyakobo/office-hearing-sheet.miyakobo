@@ -109,7 +109,7 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>会社名（案件）</th><th>受信日時</th><th>対応状況</th><th>社内担当者</th><th>ひとことまとめ</th><th>入力者</th><th>ご担当者</th>
+        <th>入力者会社名</th><th>受信日時</th><th>対応状況</th><th>社内担当者</th><th>入力者</th><th>ご担当者</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -212,7 +212,7 @@ function renderRows(){
   var f = currentFilter();
   var rows = allRows.filter(function(r){
     if(f.q){
-      var hay = [r.company,r.authorCompany,r.authorName,r.contact].join(" ").toLowerCase();
+      var hay = [r.authorCompany,r.authorName,r.contact].join(" ").toLowerCase();
       if(hay.indexOf(f.q)===-1) return false;
     }
     return true;
@@ -223,11 +223,10 @@ function renderRows(){
     var d = r.timestamp ? new Date(r.timestamp) : null;
     var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
     return '<tr data-i="'+i+'" data-id="'+esc(r.id||"")+'">'
-      + '<td><b>'+esc(r.company||"（会社名未記入）")+'</b></td>'
+      + '<td><b>'+esc(r.authorCompany||"（会社名未記入）")+'</b></td>'
       + '<td>'+esc(dstr)+'</td>'
       + '<td>'+esc(r.status||"未対応")+'</td>'
       + '<td>'+esc(r.assignee||"—")+'</td>'
-      + '<td>'+esc(r.oneLineSummary||"")+'</td>'
       + '<td>'+esc(r.authorName||"")+'</td>'
       + '<td>'+esc(r.contact||"")+'</td>'
       + '</tr>';
@@ -248,16 +247,15 @@ function openDetail(r){
   var d = r.timestamp ? new Date(r.timestamp) : null;
   var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
   $("detailKicker").textContent = dstr;
-  $("detailTitle").textContent = r.company || r.authorCompany || "（会社名未記入）";
+  $("detailTitle").textContent = r.authorCompany || "（会社名未記入）";
   $("detailMeta").innerHTML = [
     ["入力者会社名", r.authorCompany], ["入力者お名前", r.authorName],
     ["入力者メール", r.authorEmail], ["入力者電話番号", r.authorTel],
-    ["会社名（案件）", r.company], ["ご担当者", r.contact],
+    ["ご担当者", r.contact],
     ["移転先所在地", r.address], ["入居希望", r.moveDate], ["予算", r.budget],
     ["社内担当者", r.assignee], ["対応状況", r.status || "未対応"]
   ].map(function(p){ return '<div><span>'+esc(p[0])+'</span>'+esc(p[1]||"—")+'</div>'; }).join("");
-  $("detailSummary").textContent = (r.oneLineSummary ? "【ひとことまとめ】"+r.oneLineSummary+"\n\n" : "")
-    + (r.summaryText || "（サマリーなし）");
+  $("detailSummary").textContent = r.summaryText || "（サマリーなし）";
   var attachNote = [r.photos, r.docs].filter(Boolean).join("、");
   $("detailPhotos").innerHTML = attachNote
     ? '<div class="note">添付ファイル（メールに添付済み）：'+esc(attachNote)+'</div>' : "";

@@ -21,11 +21,9 @@ var SUBMISSIONS_SHEET = "Submissions";
 // 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（00〜05）に属するか。
 // section が同じ列は、シート上で見出し行がまとめて結合表示される。
 var SUBMISSIONS_FIELDS = [
-  { key: "company", header: "会社名（案件）", section: "" },
   { key: "timestamp", header: "送信日時", section: "" },
   { key: "assignee", header: "社内担当者", section: "" },
   { key: "status", header: "対応状況", section: "" },
-  { key: "oneLineSummary", header: "ひとことまとめ", section: "" },
 
   { key: "authorCompany", header: "会社名", section: "00 入力者情報" },
   { key: "authorName", header: "お名前", section: "00 入力者情報" },
@@ -68,7 +66,7 @@ var SUBMISSIONS_FIELDS = [
   { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）", section: "" },
   { key: "id", header: "ID（内部用）", section: "" }
 ];
-var FROZEN_COLS = 5; // 会社名（案件）・送信日時・社内担当者・対応状況・ひとことまとめ を固定表示
+var FROZEN_COLS = 3; // 送信日時・社内担当者・対応状況 を固定表示
 var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
 
 // 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
@@ -95,10 +93,10 @@ function formatSubmissionsSheet_(sheet) {
   sheet.getRange(1, 1, 1, n).setValues([groupRow]);
   sheet.getRange(2, 1, 1, n).setValues([labelRow]);
 
-  // セクション（01〜08、および案件名などの識別列）ごとに背景色を交互に変え、
+  // セクション（00〜05、および送信日時などの識別列）ごとに背景色を交互に変え、
   // 境目に太めの縦線を入れて「どこからどこまでが同じ設問グループか」を一目でわかるようにする
-  var SECTION_COLORS = ["#e4e4e7", "#ececee"]; // 01/03/05/07 と 02/04/06/08 で交互
-  var IDENT_COLOR = "#d3d3d6"; // 案件名など、セクションを持たない識別列
+  var SECTION_COLORS = ["#e4e4e7", "#ececee"]; // セクションごとに交互
+  var IDENT_COLOR = "#d3d3d6"; // 送信日時など、セクションを持たない識別列
   var maxRows = Math.max(sheet.getMaxRows(), 200);
   var col = 1, sectionIndex = -1;
   while (col <= n) {
@@ -125,8 +123,7 @@ function formatSubmissionsSheet_(sheet) {
   sheet.setFrozenRows(2);
   sheet.setFrozenColumns(FROZEN_COLS);
   sheet.setColumnWidths(1, n, 160);
-  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("company") + 1, 220);
-  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("oneLineSummary") + 1, 320);
+  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("authorCompany") + 1, 220);
   sheet.setColumnWidth(n, 420); // 最後列（RAW JSON）は広め
 
   sheet.getRange(1, 1, 1, n).setFontWeight("bold").setHorizontalAlignment("center");
@@ -141,6 +138,12 @@ function formatSubmissionsSheet_(sheet) {
   if (statusCol > 0) {
     var validation = SpreadsheetApp.newDataValidation().requireValueInList(STATUS_OPTIONS, true).setAllowInvalid(true).build();
     sheet.getRange(3, statusCol, Math.max(sheet.getMaxRows() - 2, 1), 1).setDataValidation(validation);
+  }
+
+  // 送信日時は「9月15日 11:49」のように月日時分だけの表示にする（セルの実体は日時のまま、見た目だけ変える）
+  var tsCol = keys.indexOf("timestamp") + 1;
+  if (tsCol > 0) {
+    sheet.getRange(3, tsCol, Math.max(sheet.getMaxRows() - 2, 1), 1).setNumberFormat('M"月"d"日" H:mm');
   }
 }
 
@@ -195,32 +198,6 @@ function computeAreas_(checks, rooms) {
     if (a === "倉庫・書庫・ロッカー") return storageSummary_(rooms.storage);
     return a;
   }).join("、");
-}
-
-// 中学生が読んでも内容がわかるような、平易な一言サマリーを作る（管理者一覧でひと目で状況を把握するため）
-function buildPlainSummary_(text, radio, checks) {
-  var who = text.company || text.authorCompany || "（会社名未記入）";
-  var name = text.contact ? "（" + text.contact + "様）" : "";
-  var parts = [];
-  parts.push(who + name + "からの回答です。");
-
-  var kind = radio.projectType || "オフィスの見直し";
-  parts.push("内容は「" + kind + "」の検討。");
-
-  var meta = [];
-  if (text.moveDate) meta.push("希望時期は" + text.moveDate);
-  if (text.budget) meta.push("予算は" + text.budget);
-  if (text.sizeNote) meta.push("広さは" + text.sizeNote + "くらい");
-  if (meta.length) parts.push(meta.join("、") + "。");
-
-  if (text.headNow || text.headMove) {
-    parts.push("人数は現在" + (text.headNow || "？") + "名くらいで、入居時は" + (text.headMove || "？") + "名くらいを想定。");
-  }
-
-  var pr = (checks.priorities || []).slice(0, 2);
-  if (pr.length) parts.push("特に大事にしたいのは「" + pr.join("」「") + "」とのこと。");
-
-  return parts.join("");
 }
 
 /* ───────────────────────────── doPost: 回答の受信 ───────────────────────────── */
@@ -285,14 +262,13 @@ function doPost(e) {
     var attachments = photoResult.blobs.concat(docResult.blobs);
 
     var id = Utilities.getUuid();
-    var timestamp = body.submittedAt || new Date().toISOString();
+    var timestamp = body.submittedAt ? new Date(body.submittedAt) : new Date();
 
     var data = {
       id: id, timestamp: timestamp,
-      oneLineSummary: buildPlainSummary_(text, radio, checks),
       authorCompany: text.authorCompany || "", authorName: text.authorName || "",
       authorEmail: text.authorEmail || "", authorTel: text.authorTel || "",
-      company: text.company || "", contact: text.contact || "",
+      contact: text.contact || "",
       address: text.address || "", moveDate: text.moveDate || "", budget: text.budget || "",
       sizeNote: text.sizeNote || "", projectType: radio.projectType || "",
       background: (checks.background || []).join("、"), backgroundOther: text.backgroundOther || "",
