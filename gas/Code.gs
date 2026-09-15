@@ -23,7 +23,7 @@ var COMPANIES_SHEET = "Companies";
 // 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（01〜08）に属するか。
 // section が同じ列は、シート上で見出し行がまとめて結合表示される。
 var SUBMISSIONS_FIELDS = [
-  { key: "caseName", header: "案件名", section: "" },
+  { key: "company", header: "会社名（案件）", section: "" },
   { key: "timestamp", header: "送信日時", section: "" },
   { key: "senderType", header: "送信元区分", section: "" },
   { key: "assignee", header: "社内担当者", section: "" },
@@ -32,49 +32,48 @@ var SUBMISSIONS_FIELDS = [
   { key: "token", header: "リンクトークン", section: "" },
   { key: "linkCompany", header: "登録会社名（トークン）", section: "" },
 
-  { key: "company", header: "会社名（本人記入）", section: "01 プロジェクト概要" },
+  { key: "authorCompany", header: "会社名", section: "00 入力者情報" },
+  { key: "authorName", header: "お名前", section: "00 入力者情報" },
+  { key: "authorEmail", header: "メールアドレス", section: "00 入力者情報" },
+  { key: "authorTel", header: "電話番号", section: "00 入力者情報" },
+
   { key: "contact", header: "ご担当者名・役職", section: "01 プロジェクト概要" },
-  { key: "contactEmail", header: "ご担当者メールアドレス", section: "01 プロジェクト概要" },
-  { key: "contactPhone", header: "ご担当者電話番号", section: "01 プロジェクト概要" },
-  { key: "address", header: "現在のオフィス所在地", section: "01 プロジェクト概要" },
+  { key: "address", header: "移転先のオフィス所在地", section: "01 プロジェクト概要" },
   { key: "moveDate", header: "入居希望日・移転期限", section: "01 プロジェクト概要" },
   { key: "budget", header: "想定予算", section: "01 プロジェクト概要" },
   { key: "sizeNote", header: "想定面積", section: "01 プロジェクト概要" },
   { key: "projectType", header: "プロジェクト種別", section: "01 プロジェクト概要" },
+  { key: "background", header: "検討の背景", section: "01 プロジェクト概要" },
+  { key: "backgroundOther", header: "検討の背景（その他）", section: "01 プロジェクト概要" },
+  { key: "priorities", header: "優先要件", section: "01 プロジェクト概要" },
+  { key: "priorityOther", header: "優先要件（その他）", section: "01 プロジェクト概要" },
 
-  { key: "background", header: "検討の背景", section: "02 検討の背景" },
-  { key: "backgroundOther", header: "検討の背景（その他）", section: "02 検討の背景" },
+  { key: "headNow", header: "現在の人数", section: "02 人員・座席" },
+  { key: "headMove", header: "入居時の想定人数", section: "02 人員・座席" },
+  { key: "headFuture", header: "将来の想定人数（3年後目安）", section: "02 人員・座席" },
+  { key: "seatType", header: "座席タイプ", section: "02 人員・座席" },
+  { key: "seatTypeOther", header: "座席タイプ（その他）", section: "02 人員・座席" },
+  { key: "deskSize", header: "希望の机サイズ", section: "02 人員・座席" },
 
-  { key: "headNow", header: "現在の人数", section: "03 人員・座席" },
-  { key: "headMove", header: "入居時の想定人数", section: "03 人員・座席" },
-  { key: "headFuture", header: "将来の想定人数（3年後目安）", section: "03 人員・座席" },
-  { key: "seatType", header: "座席タイプ", section: "03 人員・座席" },
-  { key: "seatTypeOther", header: "座席タイプ（その他）", section: "03 人員・座席" },
-  { key: "deskSize", header: "希望の机サイズ", section: "03 人員・座席" },
+  { key: "imageKeywords", header: "求める空間イメージ", section: "03 求める空間イメージ" },
+  { key: "imageOther", header: "空間イメージ（その他）", section: "03 求める空間イメージ" },
 
-  { key: "imageKeywords", header: "求める空間イメージ", section: "04 求める空間イメージ" },
-  { key: "imageOther", header: "空間イメージ（その他）", section: "04 求める空間イメージ" },
+  { key: "areas", header: "必要な機能・エリア", section: "04 必要な機能・設備" },
+  { key: "areaOther", header: "その他のエリア", section: "04 必要な機能・設備" },
+  { key: "equipment", header: "設備・技術要件", section: "04 必要な機能・設備" },
+  { key: "equipmentOther", header: "設備・技術要件（その他）", section: "04 必要な機能・設備" },
 
-  { key: "areas", header: "必要な機能・エリア", section: "05 必要な機能・エリア" },
-  { key: "areaOther", header: "その他のエリア", section: "05 必要な機能・エリア" },
-
-  { key: "equipment", header: "設備・技術要件", section: "06 設備・技術要件" },
-  { key: "equipmentOther", header: "設備・技術要件（その他）", section: "06 設備・技術要件" },
-
-  { key: "priorities", header: "優先要件", section: "07 優先要件" },
-  { key: "priorityOther", header: "優先要件（その他）", section: "07 優先要件" },
-
-  { key: "drawings", header: "図面データの有無", section: "08 特記事項・物件資料" },
-  { key: "notes", header: "面談メモ・特記事項", section: "08 特記事項・物件資料" },
-  { key: "testFitDate", header: "テストフィット希望日", section: "08 特記事項・物件資料" },
-  { key: "photos", header: "添付写真（ファイル名）", section: "08 特記事項・物件資料" },
-  { key: "docs", header: "添付資料（ファイル名）", section: "08 特記事項・物件資料" },
+  { key: "drawings", header: "図面データの有無", section: "05 特記事項・物件資料" },
+  { key: "notes", header: "面談メモ・特記事項", section: "05 特記事項・物件資料" },
+  { key: "testFitDate", header: "テストフィット希望日", section: "05 特記事項・物件資料" },
+  { key: "photos", header: "添付写真（ファイル名）", section: "05 特記事項・物件資料" },
+  { key: "docs", header: "添付資料（ファイル名）", section: "05 特記事項・物件資料" },
 
   { key: "summaryText", header: "要件サマリー（全文）", section: "" },
   { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）", section: "" },
   { key: "id", header: "ID（内部用）", section: "" }
 ];
-var FROZEN_COLS = 6; // 案件名・送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
+var FROZEN_COLS = 6; // 会社名（案件）・送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
 var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
 var COMPANIES_HEADERS = ["トークン", "会社名", "発行日時", "備考"];
 
@@ -143,7 +142,7 @@ function formatSubmissionsSheet_(sheet) {
   sheet.setFrozenRows(2);
   sheet.setFrozenColumns(FROZEN_COLS);
   sheet.setColumnWidths(1, n, 160);
-  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("caseName") + 1, 220);
+  sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("company") + 1, 220);
   sheet.setColumnWidth(SUBMISSIONS_FIELDS.map(function (f) { return f.key; }).indexOf("oneLineSummary") + 1, 320);
   sheet.setColumnWidth(n, 420); // 最後列（RAW JSON）は広め
 
@@ -187,12 +186,6 @@ function getOrCreateSubmissionsSheet_() {
 
 /* ───────────────────────────── サマリー用の小さな整形ヘルパー ───────────────────────────── */
 
-function withQty_(name, cap, capUnit, count, countUnit) {
-  var parts = [];
-  if (cap) parts.push(cap + capUnit);
-  if (count) parts.push(count + countUnit);
-  return parts.length ? name + "（" + parts.join("・") + "）" : name;
-}
 function roomsSummary_(name, rows, capUnit, countUnit) {
   var list = (rows || []).filter(function (r) { return r && (r.cap || r.count); });
   if (!list.length) return name;
@@ -217,22 +210,28 @@ function computeSenderType_(token, linkCompany) {
   if (linkCompany) return linkCompany;
   return "⚠未登録トークン：" + token; // 発行し忘れ・URL改ざん等の可能性。Companiesシートを確認してください
 }
-function computeAreas_(checks, rooms, text) {
+function storageSummary_(rows) {
+  var list = (rows || []).filter(function (r) { return r && (r.w || r.d || r.count); });
+  if (!list.length) return "倉庫・書庫・ロッカー";
+  var parts = list.map(function (r) {
+    var size = [r.w ? "W" + r.w : "", r.d ? "D" + r.d : ""].filter(function (x) { return x; }).join(" × ");
+    return [size ? size + "mm" : "", r.count ? r.count + "個" : ""].filter(function (x) { return x; }).join(" ");
+  });
+  return "倉庫・書庫・ロッカー（" + parts.join("、") + "）";
+}
+function computeAreas_(checks, rooms) {
   var list = checks.areas || [];
   return list.map(function (a) {
     if (a === "会議室") return roomsSummary_(a, rooms.meeting, "名用", "室");
-    if (a === "フォンブース") return withQty_(a, text.capPhoneBooth, "名用", text.qtyPhoneBooth, "個");
-    if (a === "倉庫・書庫・ロッカー") {
-      var sizes = checks.storageSize || [];
-      return sizes.length ? a + "（" + sizes.join("・") + "）" : a;
-    }
+    if (a === "フォンブース") return roomsSummary_(a, rooms.phoneBooth, "名用", "個");
+    if (a === "倉庫・書庫・ロッカー") return storageSummary_(rooms.storage);
     return a;
   }).join("、");
 }
 
 // 中学生が読んでも内容がわかるような、平易な一言サマリーを作る（管理者一覧でひと目で状況を把握するため）
 function buildPlainSummary_(text, radio, checks) {
-  var who = text.company || text.caseName || "（会社名未記入）";
+  var who = text.company || text.authorCompany || "（会社名未記入）";
   var name = text.contact ? "（" + text.contact + "様）" : "";
   var parts = [];
   parts.push(who + name + "からの回答です。");
@@ -304,9 +303,10 @@ function doPost(e) {
     var token = String(body.token || "").trim();
 
     var missing = [];
-    if (!String(text.company || "").trim()) missing.push("会社名");
-    if (!isValidEmail_(text.contactEmail)) missing.push("メールアドレス");
-    if (!String(text.contactPhone || "").trim()) missing.push("お電話番号");
+    if (!String(text.authorCompany || "").trim()) missing.push("会社名");
+    if (!String(text.authorName || "").trim()) missing.push("お名前");
+    if (!isValidEmail_(text.authorEmail)) missing.push("メールアドレス");
+    if (!String(text.authorTel || "").trim()) missing.push("電話番号");
     if (missing.length) {
       return ContentService.createTextOutput(JSON.stringify({
         ok: false, error: "必須項目が未入力です：" + missing.join("、")
@@ -333,18 +333,19 @@ function doPost(e) {
       id: id, timestamp: timestamp, token: token, linkCompany: linkCompany,
       senderType: computeSenderType_(token, linkCompany),
       oneLineSummary: buildPlainSummary_(text, radio, checks),
-      caseName: text.caseName || "", company: text.company || "", contact: text.contact || "",
-      contactEmail: text.contactEmail || "", contactPhone: text.contactPhone || "",
+      authorCompany: text.authorCompany || "", authorName: text.authorName || "",
+      authorEmail: text.authorEmail || "", authorTel: text.authorTel || "",
+      company: text.company || "", contact: text.contact || "",
       address: text.address || "", moveDate: text.moveDate || "", budget: text.budget || "",
       sizeNote: text.sizeNote || "", projectType: radio.projectType || "",
       background: (checks.background || []).join("、"), backgroundOther: text.backgroundOther || "",
+      priorities: (checks.priorities || []).join("、"), priorityOther: text.priorityOther || "",
       headNow: text.headNow || "", headMove: text.headMove || "", headFuture: text.headFuture || "",
       seatType: (checks.seatType || []).join("、"), seatTypeOther: text.seatTypeOther || "",
       deskSize: computeDeskSize_(checks, radio, text),
       imageKeywords: (checks.imageKeywords || []).join("、"), imageOther: text.imageOther || "",
-      areas: computeAreas_(checks, rooms, text), areaOther: text.areaOther || "",
+      areas: computeAreas_(checks, rooms), areaOther: text.areaOther || "",
       equipment: (checks.equipment || []).join("、"), equipmentOther: text.equipmentOther || "",
-      priorities: (checks.priorities || []).join("、"), priorityOther: text.priorityOther || "",
       drawings: (checks.drawings || []).join("、"),
       notes: text.notes || "", testFitDate: text.testFitDate || "",
       photos: photoResult.names.join("、"), docs: docResult.names.join("、"),
@@ -356,20 +357,21 @@ function doPost(e) {
     sheet.appendRow(row);
 
     // 通知メール（送信元・記入者に関わらず、常にこのスクリプトの実行アカウントから送信される）
-    var subject = "【オフィス要件ヒアリング】" + (text.caseName || text.company || "新規案件")
+    var subject = "【オフィス要件ヒアリング】" + (text.company || text.authorCompany || "新規案件")
       + "（" + Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm") + "）";
     var bodyText = (body.summaryText || "（内容なし）")
       + "\n\n─────────────\n"
       + "リンクトークン: " + (token || "（社内利用・トークンなし）")
       + (linkCompany ? "\n登録会社名: " + linkCompany : "")
-      + (text.contactEmail ? "\nご担当者メール: " + text.contactEmail : "")
-      + (text.contactPhone ? "\nご担当者電話: " + text.contactPhone : "");
+      + (text.authorName ? "\n入力者名: " + text.authorName : "")
+      + (text.authorEmail ? "\n入力者メール: " + text.authorEmail : "")
+      + (text.authorTel ? "\n入力者電話: " + text.authorTel : "");
     var mailOptions = {};
     if (attachments.length) mailOptions.attachments = attachments;
     GmailApp.sendEmail(getNotifyEmail_(), subject, bodyText, mailOptions);
 
-    // 記入者本人への受付確認メール（メールアドレスの記入があった場合のみ）
-    sendConfirmationToSubmitter_(text.contactEmail, text.contact, body.summaryText);
+    // 記入者本人への受付確認メール（メールアドレスは必須項目のため、通常は必ず送られる）
+    sendConfirmationToSubmitter_(text.authorEmail, text.authorName, body.summaryText);
 
     return ContentService.createTextOutput(JSON.stringify({ ok: true, id: id }))
       .setMimeType(ContentService.MimeType.JSON);
