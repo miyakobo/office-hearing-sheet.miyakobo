@@ -76,15 +76,19 @@ admin.html（パスワード保護）── 一覧取得 ──▶ 同じ Apps S
 ### 5. サイトの公開（GitHub Pages）
 
 1. GitHubリポジトリの Settings → Pages で、このブランチ（またはmainにマージ後）を公開元に設定する。
-2. 公開後のURL例: `https://<ユーザー名>.github.io/<リポジトリ名>/index.html`
+2. 公開後のURL:
+   - フォーム: `https://miyakobo.github.io/office-hearing-sheet.miyakobo/index.html`
+   - 管理画面: `https://miyakobo.github.io/office-hearing-sheet.miyakobo/admin.html`
 
 他の静的ホスティング（Netlify・Vercel・Cloudflare Pagesなど）でも、`index.html` と `admin.html` をそのまま配置すれば動きます。
 
+> このリポジトリは個人アカウント`raraji827`から、Organization `miyakobo` に移動済みです。これにより、サイトURLの先頭が `raraji827.github.io` から `miyakobo.github.io` に変わりました。移動前に発行済みの企業別リンク（`?c=`付きURL）は、送付し直す必要があります。
+
 ### 6.（あとで・任意）独自ドメインの設定
 
-サイトのURLの先頭に `raraji827.github.io` と出るのが気になる場合、`hearing.miyakobo.com` のような
-独自ドメインに切り替えることもできます。ただしDNSの設定（ドメイン管理画面での操作）が必要になるため、
-**今は保留**にしています。必要になったらいつでも対応するので、その時に声をかけてください。
+サイトのURLの先頭を `hearing.miyakobo.com` のような独自ドメインに切り替えることもできます。ただしDNSの設定
+（ドメイン管理画面での操作）が必要になるため、**今は保留**にしています。必要になったらいつでも対応するので、
+その時に声をかけてください。
 
 ## 企業ごとの専用リンクの発行
 

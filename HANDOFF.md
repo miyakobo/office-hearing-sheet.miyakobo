@@ -21,11 +21,13 @@
 
 ## リポジトリ・環境情報
 
-- GitHubリポジトリ: `raraji827/office-hearing-sheet.miyakobo`
+- GitHubリポジトリ: `miyakobo/office-hearing-sheet.miyakobo`
+  （個人アカウント`raraji827`から、URL先頭の`raraji827`表記を消すためOrganization `miyakobo`に移動済み。
+  git remoteが古い`raraji827/...`のままでも、GitHubの自動リダイレクトでfetch/pushは動作する）
 - 作業ブランチ: `claude/website-build-t9qcds`（これまでの全作業はここにコミット・プッシュ済み）
 - 公開サイト（GitHub Pages）:
-  - フォーム: `https://raraji827.github.io/office-hearing-sheet.miyakobo/index.html`
-  - 管理画面: `https://raraji827.github.io/office-hearing-sheet.miyakobo/admin.html`
+  - フォーム: `https://miyakobo.github.io/office-hearing-sheet.miyakobo/index.html`
+  - 管理画面: `https://miyakobo.github.io/office-hearing-sheet.miyakobo/admin.html`
 - バックエンド（Google Apps Script Web App URL、`index.html`/`admin.html`双方にハードコード済み）:
   `https://script.google.com/macros/s/AKfycby3A8SC1FOxnVkloGa3YPX9U0LDtwEQCVEtyVxhBFzR9V9DqXTPLNncykenxI2HTmrZvw/exec`
 - 管理画面パスワード: デフォルト `miyakobo-7k2x9q`（スプレッドシートのメニュー「宮工房ヒアリングツール」→
@@ -84,10 +86,13 @@ GAS Web App: doGet(?mode=list&pass=...)  ← パスワード一致時のみ全�
    という明確な要望があったため、**Drive連携を完全に廃止**し、写真・資料はメールへの直接添付のみに
    変更した（Gmail 1通25MB上限に注意。フォーム側で写真1枚8MB×5枚、資料1件10MB×5件に制限）。
    結果、必要なOAuthスコープは `spreadsheets.currentonly` と `gmail.send` のみ。
-4. **なぜカスタムドメイン化を保留にしたか**：GitHub Pagesの個人アカウントのプロジェクトページは
-   URL先頭に`raraji827.github.io`が出る仕様で変更できない。独自ドメイン（例：hearing.miyakobo.com）
-   案をユーザーは選んだが、DNS設定作業が必要になるため、「最低限のことだけやりたい」という要望を
-   受けて**保留**にしている（`README.md`にその旨と手順を明記済み。`CNAME`ファイルは一旦削除済み）。
+4. **URL先頭の`raraji827`表記について**：当初GitHub Pagesの個人アカウントのプロジェクトページは
+   URL先頭に`raraji827.github.io`が出る仕様で変更できず、独自ドメイン（例：hearing.miyakobo.com）か
+   別ホスティングへの切り替えを提案していたが、DNS設定が必要でユーザーの「最低限のことだけやりたい」
+   という要望に合わないため保留にしていた。**その後、GitHub上で完結する解決策として、リポジトリを
+   個人アカウント`raraji827`からOrganization `miyakobo`へ移動**し、URLを
+   `https://miyakobo.github.io/office-hearing-sheet.miyakobo/` に変更済み。独自ドメイン化は
+   引き続き任意・保留（`README.md`にその旨と手順を明記済み。`CNAME`ファイルは未使用）。
 5. **フォームのデザイン・設問構成の正解データ**：ユーザーが本当に使いたかったのは、当初私が独自に
    作ったデザイン・設問ではなく、元ZIPに入っていた`#Uオフィス要件ヒアリング.dc.html`
    （Claude Design Canvasの下書き）の内容そのものだった。見た目はモノトーン（ink/paper調、
@@ -128,8 +133,13 @@ GAS Web App: doGet(?mode=list&pass=...)  ← パスワード一致時のみ全�
 ## 既知の制約・ハマりどころ
 
 - **サンドボックスのネットワーク制限**：このAI実行環境からは`script.google.com`・
-  `raraji827.github.io`への疎通が組織ポリシーでブロックされている（`curl`すると
-  `connect_rejected`）。実際のデプロイ後の動作確認は必ずユーザー側のブラウザで行う必要がある。
+  `*.github.io`への疎通が組織ポリシーでブロックされている（`curl`すると`connect_rejected`）。
+  実際のデプロイ後の動作確認は必ずユーザー側のブラウザで行う必要がある。
+- **リポジトリの所有者が個人アカウント`raraji827`からOrganization `miyakobo`に変わった**：
+  git remoteのURLは`raraji827/...`のままでも、GitHubの自動リダイレクトによりfetch/pushは問題なく
+  動作する。ただしGitHub MCPツール（`add_repo`等）はセッション開始時のオーナーでスコープが固定される
+  実装のため、新しいセッションを`miyakobo/office-hearing-sheet.miyakobo`で開始しないと、
+  GitHub API経由の操作（Issue/PR作成など）はできない可能性がある。
 - **GASのOAuthスコープ変更は要注意**：スコープを変更すると、次回デプロイ時にユーザーへの
   再認可（新しい同意画面）が発生する。ユーザーはこれに一度混乱した経緯があるため、
   スコープを変える変更をする場合は**必ず事前にその旨を明示**すること。
@@ -190,7 +200,7 @@ GAS Web App: doGet(?mode=list&pass=...)  ← パスワード一致時のみ全�
 
 ```
 あなたには、宮工房という会社向けの「オフィス要件ヒアリングシート」Webツールの開発を
-引き継いでもらいます。GitHubリポジトリ raraji827/office-hearing-sheet.miyakobo の
+引き継いでもらいます。GitHubリポジトリ miyakobo/office-hearing-sheet.miyakobo の
 ブランチ claude/website-build-t9qcds に、これまでの実装が全てコミット・プッシュ済みです。
 
 まずリポジトリ内の HANDOFF.md を読んでください。これまでの経緯・設計判断・現在の状態・
