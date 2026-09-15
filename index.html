@@ -370,9 +370,6 @@ var MAX_DOCS = 5, MAX_DOC_BYTES = 10*1024*1024;
 /* ─────────────────────────────────────────────
    2. 状態
    ───────────────────────────────────────────── */
-var TOKEN = (function(){
-  try{ return new URLSearchParams(location.search).get("c") || ""; }catch(e){ return ""; }
-})();
 var state = null, step = 0, photos = [], docs = [], submitting = false;
 var invalidKeys = [];
 var expandedSections = {}; // 「詳しく入力する」の開閉状態（保存はしない・一時的なUI状態）
@@ -972,7 +969,6 @@ function doSubmit(){
       });
     })).then(function(docAttachments){
       var payload = {
-        token: TOKEN,
         checks: state.checks, radio: state.radio, text: state.text, rooms: state.rooms,
         summaryText: summaryText,
         submittedAt: new Date().toISOString(),

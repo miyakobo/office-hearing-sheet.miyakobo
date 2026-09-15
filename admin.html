@@ -55,8 +55,6 @@
   td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}
   tbody tr{cursor:pointer}
   tbody tr:hover{background:var(--field)}
-  .tag{display:inline-flex;font-size:12px;padding:5px 14px;border:1px solid var(--line2);border-radius:999px}
-  .tag.warn{border-color:var(--danger);color:var(--danger);font-weight:700}
   .empty{padding:48px;text-align:center;color:var(--muted);font-size:14px}
 
   /* detail panel */
@@ -104,7 +102,6 @@
 
   <div class="filters">
     <input id="searchInput" type="text" placeholder="会社名・お名前・担当者で検索">
-    <input id="tokenInput" type="text" placeholder="リンクトークンで絞り込み">
   </div>
 
   <div class="status" id="listStatus"></div>
@@ -112,7 +109,7 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>会社名（案件）</th><th>受信日時</th><th>送信元区分</th><th>対応状況</th><th>社内担当者</th><th>ひとことまとめ</th><th>入力者</th><th>ご担当者</th>
+        <th>会社名（案件）</th><th>受信日時</th><th>対応状況</th><th>社内担当者</th><th>ひとことまとめ</th><th>入力者</th><th>ご担当者</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -207,15 +204,13 @@ $("reloadBtn").addEventListener("click", function(){
 
 function currentFilter(){
   return {
-    q: ($("searchInput").value||"").trim().toLowerCase(),
-    token: ($("tokenInput").value||"").trim().toLowerCase()
+    q: ($("searchInput").value||"").trim().toLowerCase()
   };
 }
 
 function renderRows(){
   var f = currentFilter();
   var rows = allRows.filter(function(r){
-    if(f.token && String(r.token||"").toLowerCase().indexOf(f.token)===-1) return false;
     if(f.q){
       var hay = [r.company,r.authorCompany,r.authorName,r.contact].join(" ").toLowerCase();
       if(hay.indexOf(f.q)===-1) return false;
@@ -227,11 +222,9 @@ function renderRows(){
   $("rows").innerHTML = rows.map(function(r,i){
     var d = r.timestamp ? new Date(r.timestamp) : null;
     var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
-    var warn = String(r.senderType||"").indexOf("⚠")===0;
     return '<tr data-i="'+i+'" data-id="'+esc(r.id||"")+'">'
       + '<td><b>'+esc(r.company||"（会社名未記入）")+'</b></td>'
       + '<td>'+esc(dstr)+'</td>'
-      + '<td><span class="tag'+(warn?' warn':'')+'">'+esc(r.senderType||(r.token?r.token:"社内"))+'</span></td>'
       + '<td>'+esc(r.status||"未対応")+'</td>'
       + '<td>'+esc(r.assignee||"—")+'</td>'
       + '<td>'+esc(r.oneLineSummary||"")+'</td>'
@@ -250,12 +243,11 @@ function renderRows(){
   });
 }
 $("searchInput").addEventListener("input", renderRows);
-$("tokenInput").addEventListener("input", renderRows);
 
 function openDetail(r){
   var d = r.timestamp ? new Date(r.timestamp) : null;
   var dstr = d && !isNaN(d) ? d.toLocaleString("ja-JP") : (r.timestamp||"");
-  $("detailKicker").textContent = dstr + "　/　" + (r.senderType || (r.token ? "リンク: "+r.token : "社内利用"));
+  $("detailKicker").textContent = dstr;
   $("detailTitle").textContent = r.company || r.authorCompany || "（会社名未記入）";
   $("detailMeta").innerHTML = [
     ["入力者会社名", r.authorCompany], ["入力者お名前", r.authorName],

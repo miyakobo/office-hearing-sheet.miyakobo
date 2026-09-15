@@ -6,8 +6,7 @@
  * ウェブアプリとしてデプロイして使います。手順は README.md 参照。
  *
  * シート構成（初回実行時に自動作成されます）:
- *   - "Submissions" … 送信された回答の1件1行ログ（01〜08のセクションごとに列をまとめた一覧）
- *   - "Companies"   … 企業別リンクのトークン → 会社名 の対応表（任意・記録用）
+ *   - "Submissions" … 送信された回答の1件1行ログ（00〜05のセクションごとに列をまとめた一覧）
  *
  * Submissionsシートの見出しは日本語（人が読むため）だが、admin.html等プログラムからの
  * 読み書きは SUBMISSIONS_FIELDS の内部キー（英語・位置固定）で行うため、見出し文言を
@@ -18,19 +17,15 @@
  */
 
 var SUBMISSIONS_SHEET = "Submissions";
-var COMPANIES_SHEET = "Companies";
 
-// 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（01〜08）に属するか。
+// 内部キー（順序固定・admin.html等が参照） / シートに印字する日本語見出し / どのセクション（00〜05）に属するか。
 // section が同じ列は、シート上で見出し行がまとめて結合表示される。
 var SUBMISSIONS_FIELDS = [
   { key: "company", header: "会社名（案件）", section: "" },
   { key: "timestamp", header: "送信日時", section: "" },
-  { key: "senderType", header: "送信元区分", section: "" },
   { key: "assignee", header: "社内担当者", section: "" },
   { key: "status", header: "対応状況", section: "" },
   { key: "oneLineSummary", header: "ひとことまとめ", section: "" },
-  { key: "token", header: "リンクトークン", section: "" },
-  { key: "linkCompany", header: "登録会社名（トークン）", section: "" },
 
   { key: "authorCompany", header: "会社名", section: "00 入力者情報" },
   { key: "authorName", header: "お名前", section: "00 入力者情報" },
@@ -73,9 +68,8 @@ var SUBMISSIONS_FIELDS = [
   { key: "rawJson", header: "RAW JSON（内部用・編集しないでください）", section: "" },
   { key: "id", header: "ID（内部用）", section: "" }
 ];
-var FROZEN_COLS = 6; // 会社名（案件）・送信日時・送信元区分・社内担当者・対応状況・ひとことまとめ を固定表示
+var FROZEN_COLS = 5; // 会社名（案件）・送信日時・社内担当者・対応状況・ひとことまとめ を固定表示
 var STATUS_OPTIONS = ["未対応", "対応中", "完了"];
-var COMPANIES_HEADERS = ["トークン", "会社名", "発行日時", "備考"];
 
 // 初期の管理者パスワード（admin.html用）。スプレッドシートのメニュー
 // 「宮工房ヒアリングツール」→「管理者パスワードを設定…」からいつでも変更できます。
@@ -92,17 +86,6 @@ function getAdminPassword_() {
 }
 
 /* ───────────────────────────── シート ヘルパー ───────────────────────────── */
-
-function getOrCreatePlainSheet_(name, headers) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    sheet = ss.insertSheet(name);
-    sheet.appendRow(headers);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
 
 function formatSubmissionsSheet_(sheet) {
   var n = SUBMISSIONS_FIELDS.length;
@@ -154,16 +137,6 @@ function formatSubmissionsSheet_(sheet) {
   try { dataRange.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, false, false); } catch (e) {}
 
   var keys = SUBMISSIONS_FIELDS.map(function (f) { return f.key; });
-  var senderTypeCol = keys.indexOf("senderType") + 1;
-  if (senderTypeCol > 0) {
-    var rule = SpreadsheetApp.newConditionalFormatRule()
-      .whenTextStartsWith("⚠")
-      .setFontColor("#b3382c").setBold(true)
-      .setRanges([sheet.getRange(3, senderTypeCol, Math.max(sheet.getMaxRows() - 2, 1), 1)])
-      .build();
-    sheet.setConditionalFormatRules([rule]);
-  }
-
   var statusCol = keys.indexOf("status") + 1;
   if (statusCol > 0) {
     var validation = SpreadsheetApp.newDataValidation().requireValueInList(STATUS_OPTIONS, true).setAllowInvalid(true).build();
@@ -204,11 +177,6 @@ function computeDeskSize_(checks, radio, text) {
   if (w) parts.push("W" + w);
   if (d) parts.push("D" + d);
   return parts.length ? parts.join(" × ") + "mm" : "W1200×D600mm（標準サイズで製作）";
-}
-function computeSenderType_(token, linkCompany) {
-  if (!token) return "社内";
-  if (linkCompany) return linkCompany;
-  return "⚠未登録トークン：" + token; // 発行し忘れ・URL改ざん等の可能性。Companiesシートを確認してください
 }
 function storageSummary_(rows) {
   var list = (rows || []).filter(function (r) { return r && (r.w || r.d || r.count); });
@@ -300,7 +268,6 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     var text = body.text || {}, checks = body.checks || {}, radio = body.radio || {}, rooms = body.rooms || {};
-    var token = String(body.token || "").trim();
 
     var missing = [];
     if (!String(text.authorCompany || "").trim()) missing.push("会社名");
@@ -313,15 +280,6 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var linkCompany = "";
-    if (token) {
-      var companies = getOrCreatePlainSheet_(COMPANIES_SHEET, COMPANIES_HEADERS);
-      var crows = companies.getDataRange().getValues();
-      for (var i = 1; i < crows.length; i++) {
-        if (String(crows[i][0]) === token) { linkCompany = String(crows[i][1] || ""); break; }
-      }
-    }
-
     var photoResult = buildAttachments_(body.photos);
     var docResult = buildAttachments_(body.docs);
     var attachments = photoResult.blobs.concat(docResult.blobs);
@@ -330,8 +288,7 @@ function doPost(e) {
     var timestamp = body.submittedAt || new Date().toISOString();
 
     var data = {
-      id: id, timestamp: timestamp, token: token, linkCompany: linkCompany,
-      senderType: computeSenderType_(token, linkCompany),
+      id: id, timestamp: timestamp,
       oneLineSummary: buildPlainSummary_(text, radio, checks),
       authorCompany: text.authorCompany || "", authorName: text.authorName || "",
       authorEmail: text.authorEmail || "", authorTel: text.authorTel || "",
@@ -361,9 +318,7 @@ function doPost(e) {
       + "（" + Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm") + "）";
     var bodyText = (body.summaryText || "（内容なし）")
       + "\n\n─────────────\n"
-      + "リンクトークン: " + (token || "（社内利用・トークンなし）")
-      + (linkCompany ? "\n登録会社名: " + linkCompany : "")
-      + (text.authorName ? "\n入力者名: " + text.authorName : "")
+      + (text.authorName ? "入力者名: " + text.authorName : "")
       + (text.authorEmail ? "\n入力者メール: " + text.authorEmail : "")
       + (text.authorTel ? "\n入力者電話: " + text.authorTel : "");
     var mailOptions = {};
@@ -413,34 +368,13 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/* ───────────────────────────── 企業別リンクの発行（スプレッドシートのメニューから） ───────────────────────────── */
+/* ───────────────────────────── スプレッドシートのメニュー ───────────────────────────── */
 
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("宮工房ヒアリングツール")
-    .addItem("新しい企業リンクを発行…", "promptNewToken")
     .addItem("管理者パスワードを設定…", "promptSetAdminPassword")
     .addToUi();
-}
-
-function promptNewToken() {
-  var ui = SpreadsheetApp.getUi();
-  var res = ui.prompt("新しい企業リンクの発行", "会社名を入力してください（例: A社）", ui.ButtonSet.OK_CANCEL);
-  if (res.getSelectedButton() !== ui.Button.OK) return;
-  var companyName = res.getResponseText().trim();
-  if (!companyName) return;
-
-  var token = generateToken_();
-  var companies = getOrCreatePlainSheet_(COMPANIES_SHEET, COMPANIES_HEADERS);
-  companies.appendRow([token, companyName, new Date().toISOString(), ""]);
-
-  ui.alert(
-    "発行しました",
-    companyName + " 様宛リンクのトークン:\n\n" + token +
-    "\n\nフォームのURLに ?c=" + token + " を付けて送付してください。\n" +
-    "例: https://<あなたのサイト>/index.html?c=" + token,
-    ui.ButtonSet.OK
-  );
 }
 
 function promptSetAdminPassword() {
@@ -451,11 +385,4 @@ function promptSetAdminPassword() {
   if (!pass) return;
   PropertiesService.getScriptProperties().setProperty("ADMIN_PASSWORD", pass);
   ui.alert("設定しました。");
-}
-
-function generateToken_() {
-  var chars = "abcdefghijkmnpqrstuvwxyz23456789"; // 紛らわしい文字(0,1,l,o)は除外
-  var out = "";
-  for (var i = 0; i < 10; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
-  return out;
 }
