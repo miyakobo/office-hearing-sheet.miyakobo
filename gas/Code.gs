@@ -49,7 +49,6 @@ var SUBMISSIONS_FIELDS = [
   { key: "deskSize", header: "希望の机サイズ", section: "02 人員・座席" },
 
   { key: "imageKeywords", header: "求める空間イメージ", section: "03 求める空間イメージ" },
-  { key: "imageOther", header: "空間イメージ（その他）", section: "03 求める空間イメージ" },
 
   { key: "areas", header: "必要な機能・エリア", section: "04 必要な機能・設備" },
   { key: "areaOther", header: "その他のエリア", section: "04 必要な機能・設備" },
@@ -276,7 +275,7 @@ function doPost(e) {
       headNow: text.headNow || "", headMove: text.headMove || "", headFuture: text.headFuture || "",
       seatType: (checks.seatType || []).join("、"), seatTypeOther: text.seatTypeOther || "",
       deskSize: computeDeskSize_(checks, radio, text),
-      imageKeywords: (checks.imageKeywords || []).join("、"), imageOther: text.imageOther || "",
+      imageKeywords: (checks.imageKeywords || []).join("、"),
       areas: computeAreas_(checks, rooms), areaOther: text.areaOther || "",
       equipment: (checks.equipment || []).join("、"), equipmentOther: text.equipmentOther || "",
       drawings: (checks.drawings || []).join("、"),

@@ -326,8 +326,7 @@ var SECTIONS = [
       {value:"モノトーン",caption:"モノトーン",images:["photos/mood-7.webp","photos/mood-8.webp"]},
       {value:"ポップ",caption:"ポップ",images:["photos/mood-9.jpg","photos/mood-10.jpg"]},
       {value:"特になし",caption:"特になし",images:[]}],
-    photos:true,
-    detail:{ label:"言葉でのご指定", fields:[{key:"imageOther",label:"その他",wide:true,ph:"例：木目を活かしたナチュラルな雰囲気で、観葉植物を多めに配置したい"}] } },
+    photos:true },
 
   { id:"areas", no:"04", en:"PROGRAM", title:"必要な機能・設備",
     hint:"ご入用の項目をお選びのうえ、数量がお決まりでしたらご入力ください",
@@ -488,7 +487,6 @@ function buildSummary(){
   var img = (c[MOOD_GROUP]||[]).slice().filter(function(v){ return v!=="特になし"; }), il = [];
   if((c[MOOD_GROUP]||[]).indexOf("特になし")!==-1 && !img.length) il.push("特になし");
   if(img.length) il.push(img.join("、"));
-  if(t.imageOther) il.push("参考・その他："+t.imageOther);
   if(il.length) blocks.push("■ 求める空間イメージ\n"+il.join("\n"));
 
   function roomsSummary(name, rows, capUnit, countUnit){
