@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>オフィス要件ヒアリング｜宮工房</title>
+<title>HEARING SHEET｜宮工房</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
@@ -29,8 +29,9 @@
   .rail{flex:1 1 260px;max-width:288px;min-width:230px;border-right:1px solid var(--line);
         padding:24px 0 28px;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto;background:var(--bg)}
   .rail .brand{padding:0 22px 18px;border-bottom:1px solid var(--line)}
+  .brand-logo{display:block;height:16px;width:auto}
   .kicker{font-family:var(--head);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
-  .rail .name{font-family:var(--head);font-weight:700;font-size:22px;line-height:1.2;margin-top:8px}
+  .rail .name{font-family:var(--head);font-weight:700;font-size:22px;line-height:1.2;margin-top:10px;letter-spacing:.02em}
   .count{display:flex;align-items:baseline;gap:7px;margin-top:14px;font-family:var(--head);line-height:1}
   .count b{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums}
   .count span{font-size:12px;letter-spacing:.14em;color:var(--muted)}
@@ -200,8 +201,8 @@
 <div class="app">
   <aside class="rail">
     <div class="brand">
-      <div class="kicker">Miyakobo</div>
-      <div class="name">オフィス要件<br>ヒアリング</div>
+      <img class="brand-logo" src="assets/logo.svg" alt="Miyakobo" width="150" height="22">
+      <div class="name">HEARING SHEET</div>
       <div class="count"><b id="filledCount">00</b><span id="stepTotalLbl">/ 06 記入済</span></div>
     </div>
     <nav class="steps" id="steps"></nav>
