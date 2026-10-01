@@ -193,6 +193,22 @@
 
   @media (max-width:720px){
     .stephead{padding:20px 18px 12px} .content{padding:20px 18px 32px} .navbar{padding:12px 18px}
+
+    /* スマホでは左レール（ロゴ＋手順一覧）が画面に張り付いて動かず操作しづらいため、
+       通常のページの流れに戻し、手順一覧は横スクロールできる帯に変える */
+    .app{display:block}
+    .rail{position:static;max-height:none;overflow:visible;max-width:none;min-width:0;width:100%;
+          border-right:none;border-bottom:1px solid var(--line);padding:18px 0 0}
+    .rail .brand{padding:0 18px 14px}
+    .steps{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+           padding:0 18px;gap:2px;scrollbar-width:none}
+    .steps::-webkit-scrollbar{display:none}
+    .step{flex:0 0 auto;width:auto;white-space:nowrap;padding:12px 14px;border-left:none;
+          border-bottom:3px solid transparent}
+    .step.on{border-left-color:transparent;border-bottom-color:var(--ink)}
+    .step .dot{margin-left:7px}
+    .step.send{margin-top:0;border-top:none;border-left:1px solid var(--line);padding-left:18px}
+    main{min-height:0}
   }
 </style>
 </head>
